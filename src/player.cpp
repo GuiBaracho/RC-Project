@@ -9,109 +9,135 @@
 #include <netdb.h>
 #include <string.h>
 #include <string>
+//#include <sstream>
+#include<bits/stdc++.h>
 
 using namespace std;
 
 #define DEFAULT_IP "localhost"
 #define DEFAULT_PORT "58018"
 
+
+string* readCommand(){
+    char c;
+    int i = 0;
+    string input[2] = {"", ""};
+
+    while ((c = getchar()) == ' ' || c == '\t') {}
+    do {
+        if (c == ' '|| c == '\t'){
+            i++;
+        } else {
+            input[i] += c;
+        }
+        if (i > 1){
+            break;
+        }
+    } while ((c = getchar()) == '\n');
+    
+}
+
+
+
 int main(int argc, char **argv){
     int fd, errcode;
-    string GSIP, GSPort;
+    string GSIP = DEFAULT_IP;
+    string GSPort = DEFAULT_PORT;
     string toString = "";
+    string argv1, argv2, argv3, argv4;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
     char err_buff[128], buffer[128];
 
-    if(argc == 1) {
-        cout << "1\n";
-        GSIP = DEFAULT_IP;
-        GSPort = DEFAULT_PORT;
-    } else {
-        cout << "2\n";
-        string argv1;
-        string argv2;
+    switch (argc) {
+        case 1:
+            break;
 
-        switch (argc) {
-            case 2:
-                argv1 = toString + argv[1];
-                if(argv1 == "-n" || argv1 == "-p") {
-                    cerr << "player: error: missing argument after '" << argv1 << "' \n";
-                } else {
-                    cerr << "player: unrecognized command-line option " << argv1 << "\n";
-                }
-                break;
+        case 2:
+            argv1 = toString + argv[1];
+
+            if(argv1 == "-n" || argv1 == "-p") {
+                cerr << "player: error: missing argument after '" << argv1 << "' \n";
+            } else {
+                cerr << "player: unrecognized command-line option " << argv1 << "\n";
+            }
+            exit(0);
             
-            case 3:
-                argv1 = toString + argv[1];
-                argv2 = toString + argv[2];
-                if(argv1 == "-n"){
-                    GSIP = argv2;
-                } else if (argv1 == "-p"){
-                    GSPort = argv2;
-                } else {
-                    cerr << "player: unrecognized command-line option " << argv1 << "\n";
-                }
-                break;
-                
+        case 3:
+            argv1 = toString + argv[1];
+            argv2 = toString + argv[2];
+
+            if(argv1 == "-n"){
+                GSIP = argv2;
+            } else if (argv1 == "-p"){
+                GSPort = argv2;
+            } else {
+                cerr << "player: unrecognized command-line option " << argv1 << "\n";
+                exit(0);
+            }
+            break;
             
-            default:
-                break;
+        case 4:
+            argv1 = toString + argv[1];
+            argv2 = toString + argv[2];
+            argv3 = toString + argv[3];
+
+            if(argv1 == "-n" || argv1 == "-p") {
+                if(argv1 == argv3){
+                    cerr << "player: error: flag '" << argv3 << "' already used\n";
+                } else if (argv3 == "-n" || argv3 == "-p") {
+                    cerr << "player: error: missing argument after '" << argv3 << "' \n";
+                } else {
+                    cerr << "player: unrecognized command-line option " << argv3 << "\n";
+                }
+            } else {
+                cerr << "player: unrecognized command-line option " << argv1 << "\n";
+            }
+            exit(0);
+            break;
+            
+        case 5:
+            argv1 = toString + argv[1];
+            argv2 = toString + argv[2];
+            argv3 = toString + argv[3];
+            argv4 = toString + argv[4];
+
+            if(argv1 == "-n"){
+                GSIP = argv2;
+            } else if (argv1 == "-p"){
+                GSPort = argv2;
+            } else {
+                cerr << "player: unrecognized command-line option " << argv1 << "\n";
+                exit(0);
+            }
+            if(argv1 == argv3){
+                cerr << "player: error: flag '" << argv3 << "' already used\n";
+                exit(0);
+            }
+            if(argv3 == "-n"){
+                GSIP = argv4;
+            } else if (argv3 == "-p"){
+                GSPort = argv4;
+            } else {
+                cerr << "player: unrecognized command-line option " << argv2 << "\n";
+                exit(0);
             }
 
-        if(argc == 1){
-            if(argv1 == "-n" || argv1 == "")
-            
-        } else if (argc )
-        
-
-        if(argv1 == "-n"){
-            GSIP = argv2;
-        } else if (argv1 == "-p"){
-            GSPort = argv2;
-        } else {
-            snprintf(err_buff, 128,"player: unrecognized command-line option '%s'/n", argv[1]);
-            perror(err_buff);
-        }
-    } else if (argc == 5){
-        cout << "3\n";
-        string argv1 = toString + argv[1];
-        string argv2 = toString + argv[2];
-        if(argv1 == "-n"){
-            GSIP = argv2;
-        } else if (argv1 == "-p"){
-            GSPort = argv2;
-        } else {
-            snprintf(err_buff, 128,"player: unrecognized command-line option '%s'/n", argv[1]);
-            perror(err_buff);
-        }
+        default:
+            cerr << "player: error: too many arguments\n";
+            exit(0);
     }
 
-    //cout << GSIP;
-    // while (1) {
-        
+    cout << GSIP << "\n";
+    cout << GSPort << "\n";
 
-    //     fd = socket(AF_INET,SOCK_STREAM,0); //TCP socket
-    //     if (fd == -1) exit(1); //error
+    char a = 'a';
 
-    //     memset(&hints,0,sizeof hints);
-    //     hints.ai_family = AF_INET; //IPv4
-    //     hints.ai_socktype = SOCK_STREAM; //TCP socket
-    //     errcode = getaddrinfo("tejo.tecnico.ulisboa.pt",PORT,&hints,&res);
-    //     if(errcode!=0)/*error*/exit(1);
-    //     n = connect(fd,res->ai_addr,res->ai_addrlen);
-    //     if(n==-1)/*error*/exit(1);
-    //     n = write(fd,"Hello!\n",7);
-    //     if(n==-1)/*error*/exit(1);
-    //     n = read(fd,buffer,128);
-    //     if(n==-1)/*error*/exit(1);
-    //     write(1,"echo: ",6); write(1,buffer,n);
+    string teste = toString + a;
 
-    //     freeaddrinfo(res);
-    //     close(fd);
-    // }
+    cout << teste << endl;
     
-    
+    return 0;
 }
