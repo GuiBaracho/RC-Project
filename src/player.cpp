@@ -87,8 +87,7 @@ int main(int argc, char **argv){
         } else if (command == "exit"){
             _exit();
         } else {
-            std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]";
-            exit(EXIT_FAILURE);
+            std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]\n";
         }
     }
         
