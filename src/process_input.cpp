@@ -22,7 +22,7 @@ void processInput2(char **argv){
     } else {
         std::cerr << "player: unrecognized command-line option " << argv1 << "\n";
     }
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 void processInput3(std::string &GSIP, std::string &GSPort, char **argv) {
@@ -35,7 +35,7 @@ void processInput3(std::string &GSIP, std::string &GSPort, char **argv) {
         GSPort = argv2;
     } else {
         std::cerr << "player: unrecognized command-line option " << argv1 << "\n";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -55,7 +55,7 @@ void processInput4(char **argv) {
     } else {
         std::cerr << "player: unrecognized command-line option " << argv1 << "\n";
     }
-    exit(0);
+    exit(EXIT_FAILURE);
 }
 
 void processInput5(std::string &GSIP, std::string &GSPort, char **argv) {
@@ -70,11 +70,11 @@ void processInput5(std::string &GSIP, std::string &GSPort, char **argv) {
         GSPort = argv2;
     } else {
         std::cerr << "player: unrecognized command-line option " << argv1 << "\n";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     if(argv1 == argv3){
         std::cerr << "player: error: flag '" << argv3 << "' already used\n";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     if(argv3 == "-n"){
         GSIP = argv4;
@@ -82,6 +82,6 @@ void processInput5(std::string &GSIP, std::string &GSPort, char **argv) {
         GSPort = argv4;
     } else {
         std::cerr << "player: unrecognized command-line option " << argv2 << "\n";
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 }
