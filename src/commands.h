@@ -8,6 +8,6 @@ void scoreboard();
 void hint();
 void state();
 void quit();
-void exit();
+void _exit();
 
 #endif

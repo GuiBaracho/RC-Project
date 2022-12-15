@@ -48,6 +48,6 @@ void quit(){
     std::cout << "quit" << "\n";
 }
 
-void exit(){
+void _exit(){
     exit(EXIT_SUCCESS);
 }

@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "process_input.h"
+#include "commands.h"
 //using namespace std;
 
 #define DEFAULT_IP "localhost"
@@ -57,7 +58,7 @@ int main(int argc, char **argv){
 
         default:
             std::cerr << "player: error: too many arguments\n";
-            exit(0);
+            exit(EXIT_FAILURE);
     }
 
     std::cout << GSIP << "\n";
@@ -69,8 +70,25 @@ int main(int argc, char **argv){
         std::string command;
         ss >> command;
 
-        switch(val(command)){
-
+        if (command == "start" | command == "sg"){
+            start(command);
+        } else if (command == "play" | command == "pl"){
+            play(command);
+        } else if (command == "guess" | command == "gw"){
+            guess(command);
+        } else if (command == "scoreboard" | command == "sb"){
+            scoreboard();
+        } else if (command == "hint" | command == "h"){
+            hint();
+        } else if (command == "state" | command == "st"){
+            state();
+        } else if (command == "quit"){
+            quit();
+        } else if (command == "exit"){
+            _exit();
+        } else {
+            std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]";
+            exit(EXIT_FAILURE);
         }
     }
         
