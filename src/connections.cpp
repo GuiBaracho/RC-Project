@@ -13,13 +13,12 @@
 
 #include "connections.h"
 
-int connectUDP(std::string GSIP, std::string GSPort, struct addrinfo &hints, struct addrinfo *res){
-    int fd;
+int connectUDPClient(std::string GSIP, std::string GSPort, int &fd, struct addrinfo &hints, struct addrinfo *&res){
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if(fd == -1){
-        std::cout << "UDP socket creation error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
-        exit(EXIT_FAILURE);
+        std::cerr << "UDP socket creation error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
     }
 
     memset(&hints, 0, sizeof hints);
@@ -27,7 +26,9 @@ int connectUDP(std::string GSIP, std::string GSPort, struct addrinfo &hints, str
     hints.ai_socktype = SOCK_DGRAM;
 
     if(getaddrinfo(GSIP.c_str(), GSPort.c_str(), &hints, &res) == -1){
-        std::cout << "UDP connection error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
-        exit(EXIT_FAILURE);
+        std::cerr << "UDP connection error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
     }
+
+    return 0;
 }

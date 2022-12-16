@@ -13,6 +13,7 @@
 
 #include "process_input.h"
 #include "commands.h"
+#include "connections.h"
 //using namespace std;
 
 #define DEFAULT_IP "localhost"
@@ -27,14 +28,14 @@ int val(std::string command){
 }
 
 int main(int argc, char **argv){
-    int fd, errcode;
+    int fdU;
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
     std::string toString = "";
     std::string argv1, argv2, argv3, argv4, buffer;
     ssize_t n;
     socklen_t addrlen;
-    struct addrinfo hints, *res;
+    struct addrinfo hintsU, *resU;
     struct sockaddr_in addr;
 
     switch (argc) {
@@ -64,6 +65,10 @@ int main(int argc, char **argv){
     std::cout << GSIP << "\n";
     std::cout << GSPort << "\n";
 
+    if(connectUDPClient(GSIP, GSPort, fdU, hintsU, resU) == -1){
+        _exit();
+    }
+
     while(1){
         std::cin >> buffer;
         std::stringstream ss(buffer);
@@ -71,7 +76,9 @@ int main(int argc, char **argv){
         ss >> command;
 
         if (command == "start" | command == "sg"){
-            start(command);
+            std::string PLID;
+            ss >> PLID;
+            start(PLID);
         } else if (command == "play" | command == "pl"){
             play(command);
         } else if (command == "guess" | command == "gw"){
