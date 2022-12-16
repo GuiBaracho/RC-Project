@@ -28,14 +28,14 @@ int val(std::string command){
 }
 
 int main(int argc, char **argv){
-    int fdU;
+    int fd;
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
     std::string toString = "";
     std::string argv1, argv2, argv3, argv4, buffer;
     ssize_t n;
     socklen_t addrlen;
-    struct addrinfo hintsU, *resU;
+    struct addrinfo hints, *res;
     struct sockaddr_in addr;
 
     switch (argc) {
@@ -65,23 +65,30 @@ int main(int argc, char **argv){
     std::cout << GSIP << "\n";
     std::cout << GSPort << "\n";
 
-    if(connectUDPClient(GSIP, GSPort, fdU, hintsU, resU) == -1){
-        _exit();
+    std::string teste = "123";
+    if(isdigit(teste[2])){
+        std::cout << stoi(teste) + 1 << "\n";
     }
+    exit(0);
+
+    // if(connectUDPClient(GSIP, GSPort, fd, hints, res) == -1){
+    //     _exit();
+    // }
 
     while(1){
-        std::cin >> buffer;
+        std::getline (std::cin, buffer);
         std::stringstream ss(buffer);
         std::string command;
         ss >> command;
 
         if (command == "start" | command == "sg"){
-            std::string PLID;
-            ss >> PLID;
-            start(PLID);
+            ss >> command;
+            start(command);
         } else if (command == "play" | command == "pl"){
+            ss >> command;
             play(command);
         } else if (command == "guess" | command == "gw"){
+            ss >> command;
             guess(command);
         } else if (command == "scoreboard" | command == "sb"){
             scoreboard();
@@ -93,6 +100,8 @@ int main(int argc, char **argv){
             quit();
         } else if (command == "exit"){
             _exit();
+            // freeaddrinfo(res);
+            // close(fd);
         } else {
             std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]\n";
         }
