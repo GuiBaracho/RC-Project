@@ -31,7 +31,6 @@ int main(int argc, char **argv){
     int fd;
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
-    std::string toString = "";
     std::string argv1, argv2, argv3, argv4, buffer;
     ssize_t n;
     socklen_t addrlen;
@@ -65,15 +64,15 @@ int main(int argc, char **argv){
     std::cout << GSIP << "\n";
     std::cout << GSPort << "\n";
 
-    std::string teste = "123";
-    if(isdigit(teste[2])){
-        std::cout << stoi(teste) + 1 << "\n";
-    }
-    exit(0);
-
-    // if(connectUDPClient(GSIP, GSPort, fd, hints, res) == -1){
-    //     _exit();
+    // std::string teste = "123";
+    // if(isdigit(teste[2])){
+    //     std::cout << stoi(teste) + 1 << "\n";
     // }
+    // exit(0);
+
+    if(connectUDPClient(GSIP, GSPort, fd, hints, res) == -1){
+        _exit();
+    }
 
     while(1){
         std::getline (std::cin, buffer);
@@ -83,7 +82,7 @@ int main(int argc, char **argv){
 
         if (command == "start" | command == "sg"){
             ss >> command;
-            start(command);
+            start(command, fd, res);
         } else if (command == "play" | command == "pl"){
             ss >> command;
             play(command);
@@ -100,8 +99,8 @@ int main(int argc, char **argv){
             quit();
         } else if (command == "exit"){
             _exit();
-            // freeaddrinfo(res);
-            // close(fd);
+            freeaddrinfo(res);
+            close(fd);
         } else {
             std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]\n";
         }
