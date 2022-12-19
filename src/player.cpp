@@ -19,19 +19,21 @@
 #define DEFAULT_IP "localhost"
 #define DEFAULT_PORT "58018"
 
-int val(std::string command){
-    std::stringstream ss;
-    int val;
-    ss << command;
-    ss >> val;
-    return val;
-}
+
+//int val(std::string command){
+    //std::stringstream ss;
+    //int val;
+    //ss << command;
+    //ss >> val;
+    //return val;
+//}
 
 int main(int argc, char **argv){
-    int fd;
+    int fd, trial;
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
     std::string argv1, argv2, argv3, argv4, buffer;
+    std::string word, PLID;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
@@ -73,7 +75,7 @@ int main(int argc, char **argv){
     if(connectUDPClient(GSIP, GSPort, fd, hints, res) == -1){
         _exit();
     }
-
+    
     while(1){
         std::getline (std::cin, buffer);
         std::stringstream ss(buffer);
@@ -82,13 +84,17 @@ int main(int argc, char **argv){
 
         if (command == "start" | command == "sg"){
             ss >> command;
-            start(command, fd, res);
+            trial = 1;
+            word = "";
+            start(command, word, fd, res);
+            PLID = command;
+            //Need to fix that PLID can be changed even if it's not correct
         } else if (command == "play" | command == "pl"){
             ss >> command;
-            play(command);
+            play(PLID, command, trial, word, fd, res);
         } else if (command == "guess" | command == "gw"){
             ss >> command;
-            guess(command);
+            guess(PLID, command, trial, fd, res);
         } else if (command == "scoreboard" | command == "sb"){
             scoreboard();
         } else if (command == "hint" | command == "h"){
@@ -96,11 +102,14 @@ int main(int argc, char **argv){
         } else if (command == "state" | command == "st"){
             state();
         } else if (command == "quit"){
-            quit();
+            quit(PLID, fd, res);
+            trial = 1;
+            word = "";
         } else if (command == "exit"){
-            _exit();
+            quit(PLID, fd, res);
             freeaddrinfo(res);
             close(fd);
+            _exit();
         } else {
             std::cerr << "player: '" << command << "' is not a valid command\nUsage: [start | sg] [play | pl] [guess | gw] [scoreboard | sb] [hint | h] [hint | h] [quit] [exit]\n";
         }
