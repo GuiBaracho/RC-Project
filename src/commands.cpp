@@ -21,7 +21,7 @@ int val(std::string command){
     return val;
 }
 
-void start(std::string PLID, std::string &word, int fd, struct addrinfo *&res){
+void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     int err;
     struct sockaddr_in addr;
     socklen_t addrlen;
@@ -47,6 +47,7 @@ void start(std::string PLID, std::string &word, int fd, struct addrinfo *&res){
     while(ss >> m){
         if (counter == 1 && m == "ERR") {
             std::cout << "Syntax of SNG incorrect or PLID invalid" << std::endl;
+            PLID = "-1";
             return;
         }
         else if (counter == 2 && m == "NOK") {
@@ -75,7 +76,7 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
     socklen_t addrlen;
     char buffer[128];
     std::string status;
-    std::string ntrial = std::to_string(trial);
+    std::string ntrial = std::to_string(trial+1);
     std::string msg = "PLG " + PLID + " " + letter + " " + ntrial + "\n";
     std::string toString = "";
     addrlen = sizeof(addr);
@@ -117,13 +118,17 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
     }
     if (status == "OK") {
         std::cout << "Word:" << word << std::endl;
-        trial++;
         return;
     }
     else if (status == "WIN") {
+        int wordl = word.length();
+        for (int i = 0; i < wordl; i++) {
+            if (word[i] == '_') {
+                word[i] = letter.at(0);
+            }
+        }
         std::cout << "Well done, you guessed: " << word << std::endl;
-        trial = 1;
-        //still need to code adding the last letter guessed to the word
+        trial = 0;
         return;
     }
     else if (status == "DUP") {
@@ -132,16 +137,15 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
     }
     else if (status == "NOK") {
         std::cout << "Letter " << letter << " is not part of the word." << std::endl;
-        trial++;
         return;
     }
     else if (status == "OVR") {
         std::cout << "Letter " << letter << " is not part of the word. No more attempts, game over." << std::endl;
-        trial = 1;
+        trial = 0;
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number not invalid or repeating the last PLG stored but with a different letter." << std::endl;
+        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter." << std::endl;
         return;
     }
     else if (status == "ERR") {
@@ -158,7 +162,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     char buffer[128];
     int counter = 1;
     std::string status;
-    std::string ntrial = std::to_string(trial);
+    std::string ntrial = std::to_string(trial+1);
     std::string msg = "PWG " + PLID + " " + gword + " " + ntrial + "\n";
     std::string toString = "";
     addrlen = sizeof(addr);
@@ -186,6 +190,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     }
     if (status == "WIN") {
         std::cout << "Well done, you guessed: " << gword << std::endl;
+        trial = 0;
         return;
     }
     else if (status == "DUP") {
@@ -194,16 +199,15 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     }
     else if (status == "NOK") {
         std::cout << "Word " << gword << " is not correct." << std::endl;
-        trial++;
         return;
     }
     else if (status == "OVR") {
         std::cout << "Word " << gword << " is not correct. No more attempts, game over." << std::endl;
-        trial = 1;
+        trial = 0;
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number not invalid or repeating the last PWG stored but with a different word." << std::endl;
+        std::cout << "Trial number invalid or repeating the last PWG stored but with a different word." << std::endl;
         return;
     }
     else if (status == "ERR") {
