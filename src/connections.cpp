@@ -26,9 +26,33 @@ int connectUDPClient(std::string GSIP, std::string GSPort, int &fd, struct addri
     hints.ai_socktype = SOCK_DGRAM;
 
     if(getaddrinfo(GSIP.c_str(), GSPort.c_str(), &hints, &res) == -1){
-        std::cerr << "UDP connection error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        std::cerr << "UDP getadressinfo error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
         return -1;
     }
 
+    return 0;
+}
+
+int connectTCPClient(std::string GSIP, std::string GSPort, int &fd, struct addrinfo &hints, struct addrinfo *&res){
+    
+    fd = socket(AF_INET,SOCK_STREAM,0);
+    if(fd == -1){
+        std::cerr << "TCP socket creation error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
+    }
+
+    memset(&hints,0,sizeof hints);
+    hints.ai_family=AF_INET;
+    hints.ai_socktype=SOCK_STREAM;
+
+    if(getaddrinfo(GSIP.c_str(), GSPort.c_str(), &hints, &res) == -1){
+        std::cerr << "TCP getadressinfo error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
+    }
+
+    if(connect(fd,res->ai_addr,res->ai_addrlen) == -1){
+        std::cerr << "TCP connection error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
+    }
     return 0;
 }

@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "commands.h"
+#include "connections.h"
 
 int val(std::string command){
     std::stringstream ss;
@@ -212,8 +213,23 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     }
 }
 
-void scoreboard(){
+void scoreboard(std::string GSIP, std::string GSPort){
     std::cout << "scoreboard" << "\n";
+    int fd;
+    socklen_t addrlen;
+    struct addrinfo hints, *res;
+
+    if(connectTCPClient(GSIP, GSPort, fd, hints, res) == -1){
+        
+    }
+
+
+    if(write(fd,"Hello!\n",7) == -1){
+        std::cerr << "TCP write error SB\n";
+    }
+    if(n==-1)/*error*/exit(1);
+    n=read(fd,buffer,128);
+    if(n==-1)/*error*/exit(1);
 }
 
 void hint(){
