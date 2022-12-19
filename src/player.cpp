@@ -84,11 +84,12 @@ int main(int argc, char **argv){
 
         if (command == "start" | command == "sg"){
             ss >> command;
-            trial = 1;
             word = "";
             start(command, word, fd, res);
-            PLID = command;
-            //Need to fix that PLID can be changed even if it's not correct
+            if (command != "-1") {
+                PLID = command;
+            }
+            trial = 0;
         } else if (command == "play" | command == "pl"){
             ss >> command;
             play(PLID, command, trial, word, fd, res);
@@ -103,7 +104,7 @@ int main(int argc, char **argv){
             state();
         } else if (command == "quit"){
             quit(PLID, fd, res);
-            trial = 1;
+            trial = 0;
             word = "";
         } else if (command == "exit"){
             quit(PLID, fd, res);
