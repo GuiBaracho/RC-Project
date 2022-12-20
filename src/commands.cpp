@@ -13,7 +13,6 @@
 #include <fstream>
 
 #include "commands.h"
-#include "connections.h"
 
 int val(std::string command){
     std::stringstream ss;
@@ -29,12 +28,12 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     socklen_t addrlen;
     char buffer[128];
     int counter = 1;
-    std::string nletter, nerror;
+    std::string nletter, nerror, w;
     std::string msg = "SNG " + PLID + "\n";
     std::string toString = "";
     addrlen = sizeof(addr);
 
-    std::cout << msg <<std::endl;
+    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1) std::cout << "Deu erro\n";
 
@@ -42,36 +41,40 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     if(err == -1) std::cout << "Deu erro1\n";
 
     std::string b = toString + buffer;
-    std::cout << b << std::endl;
+    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
-
     while(ss >> m){
         if (counter == 1 && m == "ERR") {
-            std::cout << "Syntax of SNG incorrect or PLID invalid" << std::endl;
+            std::cout << "Syntax of SNG incorrect or PLID invalid" << "\n";
             PLID = "-1";
             return;
         }
         else if (counter == 2 && m == "NOK") {
-            std::cout << "There is already a game ongoing" << std::endl;
+            std::cout << "There is already a game ongoing" << "\n";
             return;
         }
         else if (counter == 3) {
+            std::cout << "Number of letters" << "\n";
             nletter = m;
         }
         else if (counter == 4) {
             nerror = m;
+            std::cout << "Number of errors" << "\n";
         }
         counter +=1; 
     }
     int num_letters = val(nletter);
+    std::cout << num_letters << "\n";
     for (int i = 0; i < num_letters; i++) {
-        word += " _";
+        w = w + " _";
     }
-    std::cout << "New game started. Guess " << nletter << " letter word (Max " << nerror << " errors):"<< word << std::endl;
+    word = w;
+    
+    std::cout << "New game started. Guess " << nletter << " letter word (Max " << nerror << " errors):"<< word << "\n";
 }
 
-void play(std::string PLID, std::string letter, int &trial, std::string &word, int fd, struct addrinfo *&res){
+void play(std::string PLID, char letter, int &trial, std::string &word, int fd, struct addrinfo *&res){
     int err, n_occurrences;
     int counter = 1;
     struct sockaddr_in addr;
@@ -83,7 +86,7 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
     std::string toString = "";
     addrlen = sizeof(addr);
 
-    std::cout << msg <<std::endl;
+    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1) std::cout << "Deu erro\n";
 
@@ -91,13 +94,13 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
     if(err == -1) std::cout << "Deu erro1\n";
 
     std::string b = toString + buffer;
-    std::cout << b << std::endl;
+    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
 
     while(ss >> m){
         if (counter == 1 && m == "ERR") {
-            std::cout << "Error" << std::endl;
+            std::cout << "Error" << "\n";
             return;
         }
         else if (counter == 2) {
@@ -110,48 +113,52 @@ void play(std::string PLID, std::string letter, int &trial, std::string &word, i
             n_occurrences = val(m);
         }
         else if (counter > 4 && status == "OK") {
-            for (int i = 0; i < n_occurrences; i++) {
+            if (n_occurrences > 0) {
                 int pos = val(m);
                 pos = (pos*2)-1;
-                word[pos] = letter.at(0);
+                word[pos] = letter;
             }
+            else {
+                break;
+            }
+            n_occurrences--;
         } 
         counter++; 
     }
     if (status == "OK") {
-        std::cout << "Word:" << word << std::endl;
+        std::cout << "Word:" << word << "\n";
         return;
     }
     else if (status == "WIN") {
         int wordl = word.length();
         for (int i = 0; i < wordl; i++) {
             if (word[i] == '_') {
-                word[i] = letter.at(0);
+                word[i] = letter;
             }
         }
-        std::cout << "Well done, you guessed: " << word << std::endl;
+        std::cout << "Well done, you guessed: " << word << "\n";
         trial = 0;
         return;
     }
     else if (status == "DUP") {
-        std::cout << "Letter " << letter << " was sent in a previous trial." << std::endl;
+        std::cout << "Letter " << letter << " was sent in a previous trial." << "\n";
         return;
     }
     else if (status == "NOK") {
-        std::cout << "Letter " << letter << " is not part of the word." << std::endl;
+        std::cout << "Letter " << letter << " is not part of the word." << "\n";
         return;
     }
     else if (status == "OVR") {
-        std::cout << "Letter " << letter << " is not part of the word. No more attempts, game over." << std::endl;
+        std::cout << "Letter " << letter << " is not part of the word. No more attempts, game over." << "\n";
         trial = 0;
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter." << std::endl;
+        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter." << "\n";
         return;
     }
     else if (status == "ERR") {
-        std::cout << "Syntax of RLG incorrect or PLID invalid or there is no game ongoing." << std::endl;
+        std::cout << "Syntax of RLG incorrect or PLID invalid or there is no game ongoing." << "\n";
         return;
     }
     
@@ -169,7 +176,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     std::string toString = "";
     addrlen = sizeof(addr);
 
-    std::cout << msg <<std::endl;
+    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1) std::cout << "Deu erro\n";
 
@@ -177,7 +184,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     if(err == -1) std::cout << "Deu erro1\n";
 
     std::string b = toString + buffer;
-    std::cout << b << std::endl;
+    std::cout << b << "\n";
      
     std::stringstream ss(b);
     std::string m;
@@ -191,29 +198,29 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
         counter++; 
     }
     if (status == "WIN") {
-        std::cout << "Well done, you guessed: " << gword << std::endl;
+        std::cout << "Well done, you guessed: " << gword << "\n";
         trial = 0;
         return;
     }
     else if (status == "DUP") {
-        std::cout << "Word " << gword << " was sent in a previous trial." << std::endl;
+        std::cout << "Word " << gword << " was sent in a previous trial." << "\n";
         return;
     }
     else if (status == "NOK") {
-        std::cout << "Word " << gword << " is not correct." << std::endl;
+        std::cout << "Word " << gword << " is not correct." << "\n";
         return;
     }
     else if (status == "OVR") {
-        std::cout << "Word " << gword << " is not correct. No more attempts, game over." << std::endl;
+        std::cout << "Word " << gword << " is not correct. No more attempts, game over." << "\n";
         trial = 0;
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number invalid or repeating the last PWG stored but with a different word." << std::endl;
+        std::cout << "Trial number invalid or repeating the last PWG stored but with a different word." << "\n";
         return;
     }
     else if (status == "ERR") {
-        std::cout << "Syntax of PWG incorrect or PLID invalid or there is no game ongoing." << std::endl;
+        std::cout << "Syntax of PWG incorrect or PLID invalid or there is no game ongoing." << "\n";
         return;
     }
 }
@@ -305,20 +312,20 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
     err = recvfrom(fd,buffer,128,0, (struct sockaddr*)&addr,&addrlen);
     if(err == -1) std::cout << "Deu erro1\n";
     std::string b = toString + buffer;
-    std::cout << b << std::endl;
+    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
     while(ss >> m){
         if (m == "OK") {
-            std::cout << "Ongoing game quit" << std::endl;
+            std::cout << "Ongoing game quit" << "\n";
             return;
         }
         else if (m == "NOK") {
-            std::cout << "There was no ongoing game" << std::endl;
+            std::cout << "There was no ongoing game" << "\n";
             return;
         }
         else if (m == "ERR") {
-            std::cout << "There was an error" << std::endl;
+            std::cout << "There was an error" << "\n";
             return;
         }
     }

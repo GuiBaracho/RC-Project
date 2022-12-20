@@ -84,13 +84,14 @@ int main(int argc, char **argv){
 
         if (command == "start" | command == "sg"){
             ss >> command;
-            word = "";
+            word = " ";
             start(command, word, fd, res);
             if (command != "-1") {
                 PLID = command;
             }
             trial = 0;
         } else if (command == "play" | command == "pl"){
+            char command;
             ss >> command;
             play(PLID, command, trial, word, fd, res);
         } else if (command == "guess" | command == "gw"){
@@ -105,7 +106,7 @@ int main(int argc, char **argv){
         } else if (command == "quit"){
             quit(PLID, fd, res);
             trial = 0;
-            word = "";
+            word = " ";
         } else if (command == "exit"){
             quit(PLID, fd, res);
             freeaddrinfo(res);
