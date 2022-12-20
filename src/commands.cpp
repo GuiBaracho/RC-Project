@@ -39,6 +39,7 @@ void readFile(std::string name_file, char *&word_file) {
     else {
         std::cout << "Following file " << name_file << "doesn't exist" << std::endl;
     }
+    file.close();
 }
 
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
@@ -300,8 +301,8 @@ void scoreboard(std::string GSIP, std::string GSPort){
 
         sb.close();
 
-        
-        
+        char* word;
+        readFile(filename, word);
     }
 
     freeaddrinfo(res);
