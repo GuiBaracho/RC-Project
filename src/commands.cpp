@@ -13,6 +13,7 @@
 #include <fstream>
 
 #include "commands.h"
+#include "connections.h"
 
 int val(std::string command){
     std::stringstream ss;
