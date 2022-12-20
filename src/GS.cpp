@@ -15,7 +15,7 @@
 #define DEFAULT_PORT "58018"
 
 std::string toString = "";
-
+int v_mode;
 
 void readFile(std::string name_file, char *&word_file) {
     std::string data;
@@ -33,22 +33,25 @@ void readFile(std::string name_file, char *&word_file) {
     else {
         std::cout << "Following file " << name_file << "doesn't exist" << std::endl;
     }
+    file.close();
 }
 
 void processInput2GS(char **argv, char *&word_file) {
     std::string argv1 = toString + argv[1];
     readFile(argv1, word_file);
 }
+
 void processInput3GS(char **argv) {
     std::string argv2 = toString + argv[2];
 
     if(argv2 == "-p") {
         std::cerr << "player: error: missing argument after '" << argv2 << "'" << std::endl;
-    } else {
+    } else if (argv2 == "-v") {
+        v_mode = 1;
+    } else{
         std::cerr << "player: unrecognized command-line option " << argv2 << std::endl;
     }
     exit(EXIT_FAILURE);
-
 }
 
 void processInput4GS(char **argv, char *&word_file, std::string &GSPort) {
@@ -59,8 +62,42 @@ void processInput4GS(char **argv, char *&word_file, std::string &GSPort) {
 
     if(argv2 == "-p") {
         GSPort = argv3;
+    } else if (argv2 == "-v") {
+        std::cerr << "player: unrecognized command-line option " << argv3 << "\n";
+        exit(EXIT_FAILURE);
+    } else {
+        std::cerr << "player: unrecognized command-line option " << argv2 << "\n";
+        exit(EXIT_FAILURE);
     }
-    //to finish
+}
+
+void processInput5GS(char **argv, char *&word_file, std::string &GSPort) {
+    std::string argv1 = toString + argv[1];
+    readFile(argv1, word_file);
+    std::string argv2 = toString + argv[2];
+    std::string argv3 = toString + argv[3];
+    std::string argv4 = toString + argv[4];
+
+    if(argv2 == "-p") {
+        GSPort = argv3;
+        if (argv4 == "-v") {
+            v_mode = 1;
+        } else {
+            std::cerr << "player: unrecognized command-line option " << argv4 << "\n";
+            exit(EXIT_FAILURE);
+        }
+    } else if (argv2 == "-v") {
+        v_mode = 1;
+        if (argv3 == "-p") {
+            GSPort = argv4;
+        } else {
+            std::cerr << "player: unrecognized command-line option " << argv3 << "\n";
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        std::cerr << "player: unrecognized command-line option " << argv2 << "\n";
+        exit(EXIT_FAILURE);
+    }
 }
 
 int main (int argc, char **argv) {
@@ -74,6 +111,7 @@ int main (int argc, char **argv) {
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
     char *word_file;
+    v_mode = 0;
 
     switch (argc) {
         case 1:
@@ -89,12 +127,12 @@ int main (int argc, char **argv) {
         case 4:
             processInput4GS(argv, word_file, GSPort);
 
+        case 5:
+            processInput5GS(argv, word_file, GSPort);
+
         default:
             std::cerr << "server: error: too many arguments" << std::endl;
             exit(EXIT_FAILURE);
     }
     
-   
-
 }
-
