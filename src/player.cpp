@@ -100,7 +100,8 @@ int main(int argc, char **argv){
         } else if (command == "scoreboard" | command == "sb"){
             scoreboard(GSIP, GSPort);
         } else if (command == "hint" | command == "h"){
-            hint();
+            ss >> command;
+            hint(GSIP, GSPort, command);
         } else if (command == "state" | command == "st"){
             state();
         } else if (command == "quit"){

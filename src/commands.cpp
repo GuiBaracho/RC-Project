@@ -15,6 +15,10 @@
 #include "commands.h"
 #include "connections.h"
 
+#define SB 1
+#define H 2
+#define ST 3
+
 int val(std::string command){
     std::stringstream ss;
     int val;
@@ -40,6 +44,59 @@ void readFile(std::string name_file, char *&word_file) {
         std::cout << "Following file " << name_file << "doesn't exist" << std::endl;
     }
     file.close();
+}
+
+void processFile(int fd, int type){
+    size_t n, extra;
+    char buffer[512];
+    std::string msg, fsize, filename;
+    std::string toString = "";
+
+    if((n = read(fd,buffer,512)) == -1){
+        std::cerr << "TCP read error 2 SB\n";
+    }
+
+    msg = toString + buffer;
+    std::stringstream ss(msg);
+
+    ss >> filename;
+    extra = filename.length() + 1;
+
+    std::ofstream sb(filename);
+    
+    ss >> fsize;
+    extra += fsize.length() + 1;
+
+    if(type == H || type == ST){
+        std::cout << "File name: " << filename << std::endl;
+        std::cout << "File size: " << fsize << std::endl;
+    }
+
+    msg = msg.substr(extra, n - extra);
+    sb << msg;
+
+    if(type == SB || type == ST){
+        std::cout << msg;
+    }
+
+    while((n = read(fd,buffer,128)) != 0){
+        if(n == -1){
+            remove(filename.c_str());
+            std::cerr << "Error reading scoreboard\n";
+            return;
+        }
+        msg = toString + buffer;
+        msg = msg.substr(0,n);
+        sb << msg;
+        if(type == SB || type == ST){
+            std::cout << msg;
+        }
+    }
+
+    sb.close();
+
+    // char* word;
+    // readFile(filename, word);
 }
 
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
@@ -272,45 +329,46 @@ void scoreboard(std::string GSIP, std::string GSPort){
         std::cout << "Scoreboard is empty\n";
 
     } else if (m == "OK") {
-        if((n = read(fd,buffer,128)) == -1){
-            std::cerr << "TCP read error 2 SB\n";
-        }
-
-        msg = toString + buffer;
-        std::stringstream ss(msg);
-
-        ss >> filename;
-
-        std::ofstream sb(filename);
-
-        extra = filename.length() + 1;
-        ss >> m;
-        extra += m.length() + 1;
-
-        sb << msg.substr(extra, n - extra);
-
-        while((n = read(fd,buffer,128)) != 0){
-
-            if(n == -1){
-                remove(filename.c_str());
-                return;
-            }
-            msg = toString + buffer;
-            sb << msg.substr(0,n);
-        }
-
-        sb.close();
-
-        char* word;
-        readFile(filename, word);
+        processFile(fd, SB);
     }
 
     freeaddrinfo(res);
     close(fd);
 }
 
-void hint(){
-    std::cout << "hint" << "\n";
+void hint(std::string GSIP, std::string GSPort, std::string PLID){
+    int fd;
+    struct addrinfo hints, *res;
+    std::string toString = "";
+    std::string msg, status, filename;
+    char buffer[128];
+
+    connectTCPClient(GSIP, GSPort, fd, hints, res);
+
+    msg = "GHL " + PLID + "\n";
+
+    if(write(fd,msg.c_str(),msg.length()) == -1){
+        std::cerr << "TCP write error SB\n";
+    }
+    if(read(fd,buffer,128) == -1){
+        std::cerr << "TCP read error SB\n";
+    }
+
+    msg = toString + buffer;
+    std::stringstream ss(msg);
+
+    ss >> status;
+    ss >> status;
+
+    if(status == "NOK"){
+        std::cout << "Scoreboard is empty\n";
+
+    } else if (status == "OK") {
+        processFile(fd, ST);
+    }
+
+    freeaddrinfo(res);
+    close(fd);
 }
 
 void state(){
