@@ -23,6 +23,24 @@ int val(std::string command){
     return val;
 }
 
+void readFile(std::string name_file, char *&word_file) {
+    std::string data;
+    std::ifstream file;
+    file.open(name_file);
+    if(file.is_open()) {
+        file.seekg(0, file.end); //changing offset to the end 
+        int flength = file.tellg(); //getting the length through offset
+        file.seekg(0, file.beg);
+
+        word_file = new char [flength];
+        file.read(word_file, flength);
+        std::cout << word_file << std::endl;
+    }
+    else {
+        std::cout << "Following file " << name_file << "doesn't exist" << std::endl;
+    }
+}
+
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     int err;
     struct sockaddr_in addr;
