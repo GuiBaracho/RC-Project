@@ -97,7 +97,7 @@ int main(int argc, char **argv){
             ss >> command;
             guess(PLID, command, trial, fd, res);
         } else if (command == "scoreboard" | command == "sb"){
-            scoreboard();
+            scoreboard(GSIP, GSPort);
         } else if (command == "hint" | command == "h"){
             hint();
         } else if (command == "state" | command == "st"){

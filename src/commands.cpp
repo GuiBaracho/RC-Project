@@ -10,6 +10,7 @@
 #include <string.h>
 #include <string>
 #include <sstream>
+#include <fstream>
 
 #include "commands.h"
 #include "connections.h"
@@ -218,22 +219,67 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
 }
 
 void scoreboard(std::string GSIP, std::string GSPort){
-    std::cout << "scoreboard" << "\n";
     int fd;
-    socklen_t addrlen;
+    size_t n, extra;
     struct addrinfo hints, *res;
+    std::string toString = "";
+    char buffer[128];
 
-    if(connectTCPClient(GSIP, GSPort, fd, hints, res) == -1){
+    connectTCPClient(GSIP, GSPort, fd, hints, res);
 
-    }
-
-
-    if(write(fd,"Hello!\n",7) == -1){
+    if(write(fd,"GSB\n",4) == -1){
         std::cerr << "TCP write error SB\n";
     }
-    // if(n==-1)/*error*/exit(1);
-    // n=read(fd,buffer,128);
-    // if(n==-1)/*error*/exit(1);
+    if(read(fd,buffer,128) == -1){
+        std::cerr << "TCP read error SB\n";
+    }
+
+    std::string msg = toString + buffer;
+    std::stringstream ss(msg);
+    std::string m, filename;
+
+    ss >> m;
+    ss >> m;
+
+    if(m == "EMPTY"){
+        std::cout << "Scoreboard is empty\n";
+
+    } else if (m == "OK") {
+        if((n = read(fd,buffer,128)) == -1){
+            std::cerr << "TCP read error 2 SB\n";
+        }
+
+        msg = toString + buffer;
+        std::stringstream ss(msg);
+
+        ss >> filename;
+
+        std::ofstream sb(filename);
+
+        extra = filename.length() + 1;
+        ss >> m;
+        extra += m.length() + 1;
+
+        sb << msg.substr(extra, n - extra);
+
+        while((n = read(fd,buffer,128)) != 0){
+
+            if(n == -1){
+                remove(filename.c_str());
+                return;
+            }
+            msg = toString + buffer;
+            sb << msg.substr(0,n);
+        }
+
+        sb.close();
+
+        
+        
+    }
+
+    freeaddrinfo(res);
+    close(fd);
 }
 
 void hint(){
