@@ -20,7 +20,7 @@
 
 std::string toString = "";
 
-void readFile(std::string name_file, std::string word_file) {
+void readFile(std::string name_file, std::string &word_file) {
     std::ifstream file;
     std::string data;
     int count = 2;
@@ -53,12 +53,12 @@ void readFile(std::string name_file, std::string word_file) {
 }
 
 
-void processInput2GS(char **argv, std::string word_file) {
+void processInput2GS(char **argv, std::string &word_file) {
     std::string argv1 = toString + argv[1];
     readFile(argv1, word_file);
 }
 
-void processInput3GS(char **argv, std::string word_file, int &v_mode) {
+void processInput3GS(char **argv, std::string &word_file, int &v_mode) {
     std::string argv1 = toString + argv[1];
     std::string argv2 = toString + argv[2];
     readFile(argv1, word_file);
@@ -73,7 +73,7 @@ void processInput3GS(char **argv, std::string word_file, int &v_mode) {
     exit(EXIT_FAILURE);
 }
 
-void processInput4GS(char **argv, std::string word_file, std::string &GSPort) {
+void processInput4GS(char **argv, std::string &word_file, std::string &GSPort) {
     std::string argv1 = toString + argv[1];
     readFile(argv1, word_file);
     std::string argv2 = toString + argv[2];
@@ -90,7 +90,7 @@ void processInput4GS(char **argv, std::string word_file, std::string &GSPort) {
     }
 }
 
-void processInput5GS(char **argv, std::string word_file, int &v_mode, std::string &GSPort) {
+void processInput5GS(char **argv, std::string &word_file, int &v_mode, std::string &GSPort) {
     std::string argv1 = toString + argv[1];
     readFile(argv1, word_file);
     std::string argv2 = toString + argv[2];
@@ -168,6 +168,4 @@ int main (int argc, char **argv) {
     } else {
         udp_server(word_file, GSPort, v_mode);
     }
-    
 }
-

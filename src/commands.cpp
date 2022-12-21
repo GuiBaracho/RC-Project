@@ -500,4 +500,3 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
 void _exit(){
     exit(EXIT_SUCCESS);
 }
-

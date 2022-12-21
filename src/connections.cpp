@@ -76,7 +76,7 @@ int connectUDPServer(std::string GSPort, int &fd, struct addrinfo &hints, struct
         return -1;
     }
     int reuse = 1;
-    err = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    err = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)); //SO WE ARE ABLE TO REUSE THE PORT
     err = bind(fd, res->ai_addr, res->ai_addrlen);
     if(err == -1) std::cout << "UDP bind error\n" << strerror(errno);
 
