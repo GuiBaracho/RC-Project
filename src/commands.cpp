@@ -121,7 +121,7 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
         exit(EXIT_FAILURE);
     }
     file.close();
-
+    return 0;
 }
 
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
