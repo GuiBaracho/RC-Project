@@ -60,7 +60,7 @@ int connectTCPClient(std::string GSIP, std::string GSPort, int &fd, struct addri
 
 int connectUDPServer(std::string GSPort, int &fd, struct addrinfo &hints, struct addrinfo *&res) {
     int err;
-    fd = socket(AF_INET,SOCK_STREAM,0);
+    fd = socket(AF_INET,SOCK_DGRAM,0);
     if(fd == -1){
         std::cerr << "UDP socket creation error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
         return -1;
