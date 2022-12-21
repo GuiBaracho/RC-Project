@@ -11,13 +11,16 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <vector>
 
 #include "commands.h"
 #include "connections.h"
 
-#define SB 1
-#define H 2
-#define ST 3
+#define SB "RSB"
+#define H "RHL"
+#define ST "RST"
+
+#define MAX_HEADER 64
 
 int val(std::string command){
     std::stringstream ss;
@@ -46,7 +49,7 @@ void readFile(std::string name_file, char *&word_file) {
     file.close();
 }
 
-void processFile(int fd, int type){
+void processFile(int fd, std::string type){
     size_t n, extra;
     char buffer[512];
     std::string msg, fsize, filename;
@@ -72,31 +75,107 @@ void processFile(int fd, int type){
         std::cout << "File size: " << fsize << std::endl;
     }
 
-    msg = msg.substr(extra, n - extra);
+    extra++;
+    msg = msg.substr(extra , n - extra);
     sb << msg;
 
     if(type == SB || type == ST){
         std::cout << msg;
     }
 
-    while((n = read(fd,buffer,128)) != 0){
+    while((n = read(fd,buffer,512)) != 0){
         if(n == -1){
             remove(filename.c_str());
-            std::cerr << "Error reading scoreboard\n";
+            std::cerr << "Error reading \n";
             return;
         }
         msg = toString + buffer;
-        msg = msg.substr(0,n);
-        sb << msg;
+        //msg = msg.substr(0,n);
+        sb << msg.substr(0,n);
         if(type == SB || type == ST){
             std::cout << msg;
         }
     }
-
+    std::cout << msg;
     sb.close();
 
     // char* word;
     // readFile(filename, word);
+}
+
+void receiveTCPFile(int fd, std::string header[4]){
+    int n, max_h = 0, size_h = 0, offset = 0;
+    std::string header_str, arg;
+    char buffer[512];
+
+    max_h = MAX_HEADER;
+    while(max_h > 0 && (n = read(fd,buffer + offset,max_h)) > 0){
+        max_h -= n;
+        offset += n;
+    }
+    if(n == -1){
+        std::cerr << "TCP read error\n";
+        return;
+    }
+
+    header_str.append(buffer, 0, n);
+
+    std::stringstream ss(header_str);
+    for(int i = 0; i < 4; i++){
+        ss >> header[i];
+        if(header[i] == "NOK" || header[i] == "EMPTY"){
+            return;
+        }
+        size_h += header[i].length() + 1;
+    }
+
+    std::ofstream file(header[2]);
+    file.write(buffer + size_h, (MAX_HEADER - size_h)*sizeof(char));
+
+    while((n = read(fd,buffer,512)) > 0){
+        file.write(buffer, n*sizeof(char));
+    }
+    if(n == -1){
+        std::cerr << "TCP read error\n";
+        remove(header[2].c_str());
+    }
+    file.close();
+
+
+    // int n, msg_size = 0, size, offset = 0;
+    // char buffer[1024];
+    // std::vector<std::string> response;
+    // std::string buffer_str, word; 
+
+    // size = 43; // CMD(3B) + status(max 3B) + Fname(max 24B) + Fsize(max 10B) + spaces(3B) = 43
+
+    // while(size > 0 && (n = read(fd, buffer+offset, size)) > 0) {
+    //     size -= n;
+    //     offset += n;
+        
+    // }
+    // if(n == -1) { response.push_back("err"); return; }
+
+    // buffer_str.append(buffer, 0, n);
+
+    // std::stringstream ss(buffer_str);
+
+    // for(int i = 0; i < 4; i++) {
+    //     getline(ss, word, ' ');
+    //     response.push_back(word);
+    //     if(word == "NOK") { return; }
+    //     msg_size += word.size() + 1;
+    // }
+
+    // std::ofstream file(response[2], std::ios::out | std::ios::binary);
+
+    // file.write(buffer + msg_size, (43 - msg_size)*sizeof(char));
+
+    // while((n = read(fd, buffer, 1024)) > 0) {
+    //     file.write(buffer, n*sizeof(char));
+    // }
+
+    // file.close();
 }
 
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
@@ -306,6 +385,7 @@ void scoreboard(std::string GSIP, std::string GSPort){
     int fd;
     size_t n, extra;
     struct addrinfo hints, *res;
+    std::string header[4] = {"", "", "", ""};
     std::string toString = "";
     char buffer[128];
 
@@ -314,23 +394,11 @@ void scoreboard(std::string GSIP, std::string GSPort){
     if(write(fd,"GSB\n",4) == -1){
         std::cerr << "TCP write error SB\n";
     }
-    if(read(fd,buffer,128) == -1){
-        std::cerr << "TCP read error SB\n";
-    }
 
-    std::string msg = toString + buffer;
-    std::stringstream ss(msg);
-    std::string m, filename;
+    receiveTCPFile(fd, header);
 
-    ss >> m;
-    ss >> m;
-
-    if(m == "EMPTY"){
-        std::cout << "Scoreboard is empty\n";
-
-    } else if (m == "OK") {
-        processFile(fd, SB);
-    }
+    char* word;
+    readFile(header[2], word);
 
     freeaddrinfo(res);
     close(fd);
@@ -339,40 +407,60 @@ void scoreboard(std::string GSIP, std::string GSPort){
 void hint(std::string GSIP, std::string GSPort, std::string PLID){
     int fd;
     struct addrinfo hints, *res;
-    std::string toString = "";
-    std::string msg, status, filename;
-    char buffer[128];
+    std::string header[4] = {"", "", "", ""};
+    std::string msg;
 
     connectTCPClient(GSIP, GSPort, fd, hints, res);
 
     msg = "GHL " + PLID + "\n";
 
     if(write(fd,msg.c_str(),msg.length()) == -1){
-        std::cerr << "TCP write error SB\n";
-    }
-    if(read(fd,buffer,128) == -1){
-        std::cerr << "TCP read error SB\n";
+        std::cerr << "TCP write error\n";
     }
 
-    msg = toString + buffer;
-    std::stringstream ss(msg);
+    receiveTCPFile(fd, header);
 
-    ss >> status;
-    ss >> status;
-
-    if(status == "NOK"){
-        std::cout << "Scoreboard is empty\n";
-
-    } else if (status == "OK") {
-        processFile(fd, ST);
+    if(header[1] == "NOK"){
+        std::cerr << "No hints for this word\n";
+        return;
     }
+
+    std::cout << "File Name: " << header[2] << std::endl;
+    std::cout << "File Size: " << header[3] << std::endl;
 
     freeaddrinfo(res);
     close(fd);
 }
 
-void state(){
-    std::cout << "state" << "\n";
+void state(std::string GSIP, std::string GSPort, std::string PLID){
+    int fd;
+    struct addrinfo hints, *res;
+    std::string header[4] = {"", "", "", ""};
+    std::string msg;
+
+    connectTCPClient(GSIP, GSPort, fd, hints, res);
+
+    msg = "STA " + PLID + "\n";
+
+    if(write(fd,msg.c_str(),msg.length()) == -1){
+        std::cerr << "TCP write error SB\n";
+    }
+
+    receiveTCPFile(fd, header);
+
+    if(header[1] == "NOK"){
+        std::cerr << "No hints for this word\n";
+        return;
+    }
+
+    std::cout << "File Name: " << header[2] << std::endl;
+    std::cout << "File Size: " << header[3] << std::endl;
+
+    char* word;
+    readFile(header[2], word);
+
+    freeaddrinfo(res);
+    close(fd);
 }
 
 void quit(std::string PLID, int fd, struct addrinfo *&res){

@@ -1,7 +1,7 @@
 all: player
 
 player: commands process_input connections
-	g++ -o player player.cpp commands.o process_input.o connections.o
+	g++ -g -o player player.cpp commands.o process_input.o connections.o
 
 GS:
 	g++ -o GS GS.cpp
