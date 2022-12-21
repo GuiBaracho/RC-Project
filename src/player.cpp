@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
     std::string argv1, argv2, argv3, argv4, buffer;
-    std::string word, PLID;
+    std::string word = " ", PLID;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
@@ -81,13 +81,16 @@ int main(int argc, char **argv){
         ss >> command;
 
         if (command == "start" | command == "sg"){
-            ss >> command;
-            word = " ";
-            start(command, word, fd, res);
-            if (command != "-1") {
-                PLID = command;
+            if(ss >> command){
+                //word = " ";
+                start(command, word, fd, res);
+                if (command != "-1") {
+                    if(PLID != command){
+                        PLID = command;
+                        trial = 0;
+                    }
+                }
             }
-            trial = 0;
         } else if (command == "play" | command == "pl"){
             char command;
             ss >> command;

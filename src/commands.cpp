@@ -49,8 +49,8 @@ void readFile(std::string name_file, char *&word_file) {
     file.close();
 }
 
-void receiveTCPFile(int fd, std::string header[4]){
-    int n, max_h = 0, size_h = 0, offset = 0;
+int receiveTCPFile(int fd, std::string header[4], std::string type){
+    int n, max_h = 0, size_h = 0, offset = 0, i = 0;
     std::string header_str, arg;
     char buffer[512];
 
@@ -67,13 +67,47 @@ void receiveTCPFile(int fd, std::string header[4]){
     header_str.append(buffer, 0, n);
 
     std::stringstream ss(header_str);
-    for(int i = 0; i < 4; i++){
-        ss >> header[i];
-        if(header[i] == "NOK" || header[i] == "EMPTY"){
-            return;
-        }
+
+    while(i < 4 && (ss >> arg)){
+        header[i] = arg;
         size_h += header[i].length() + 1;
+        i++;
     }
+    if(i != 4){
+        std::cerr << "TCP: Syntax of response incorrect\n";
+        return -1;
+    }
+
+    if(header[0] != type){
+        std::cerr << "TCP: Syntax of response incorrect\n";
+        return -1;
+    }
+
+
+    if(type == SB){
+        if(header[1] == "EMPTY"){
+            std::cout << "Scoreboard is empty\n";
+            return -1;
+        }
+    } else if(type == H){
+        if(header[1] == "NOK"){
+            std::cout << "No data available\n";
+            return -1;
+        }
+    } else if(type == ST){
+        if(header[1] == "EMPTY"){
+            std::cout << "Scoreboard is empty\n";
+            return -1;
+        }
+    }
+
+    // for(int i = 0; i < 4; i++){
+    //     ss >> header[i];
+    //     if(header[i] == "NOK" || header[i] == "EMPTY"){
+    //         return;
+    //     }
+    //     size_h += header[i].length() + 1;
+    // }
 
     std::ofstream file(header[2]);
     file.write(buffer + size_h, (MAX_HEADER - size_h)*sizeof(char));
@@ -186,7 +220,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
         else if (counter == 2) {
             status = m;
         }
-        else if (counter == 3 && (status == "OK" || status == "NOK") ) {
+        else if (counter == 3 && (status == "OK" || status == "NOK")) {
             trial = val(m);
         }
         else if (counter == 4 && status == "OK") {
@@ -234,7 +268,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter." << "\n";
+        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter.\nUse 'state' command to update trials." << "\n";
         return;
     }
     else if (status == "ERR") {
@@ -326,7 +360,7 @@ void scoreboard(std::string GSIP, std::string GSPort){
         exit(EXIT_FAILURE);
     }
 
-    receiveTCPFile(fd, header);
+    receiveTCPFile(fd, header, SB);
 
     char* word;
     readFile(header[2], word);
@@ -350,7 +384,7 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
         exit(EXIT_FAILURE);
     }
 
-    receiveTCPFile(fd, header);
+    receiveTCPFile(fd, header, H);
 
     if(header[1] == "NOK"){
         std::cout << "No hints for this word\n";
@@ -379,7 +413,7 @@ void state(std::string GSIP, std::string GSPort, std::string PLID){
         exit(EXIT_FAILURE);
     }
 
-    receiveTCPFile(fd, header);
+    receiveTCPFile(fd, header, ST);
 
     if(header[1] == "NOK"){
         std::cerr << "No hints for this word\n";
