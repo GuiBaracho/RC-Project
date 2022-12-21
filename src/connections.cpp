@@ -56,3 +56,29 @@ int connectTCPClient(std::string GSIP, std::string GSPort, int &fd, struct addri
     }
     return 0;
 }
+
+
+int connectUDPServer(std::string GSPort, int &fd, struct addrinfo &hints, struct addrinfo *&res) {
+    int err;
+    fd = socket(AF_INET,SOCK_STREAM,0);
+    if(fd == -1){
+        std::cerr << "UDP socket creation error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
+    }
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if(getaddrinfo(NULL, GSPort.c_str(), &hints, &res) == -1){
+        std::cerr << "UDP getadressinfo error (SE FOR PRECISO TEMOS QUE TRATARO ERRO)\n";
+        return -1;
+    }
+    int reuse = 1;
+    err = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+    err = bind(fd, res->ai_addr, res->ai_addrlen);
+    if(err == -1) std::cout << "UDP bind error\n" << strerror(errno);
+
+    return 0;
+}
