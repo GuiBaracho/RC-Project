@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -11,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <ctime>
 
 #include "connections.h"
 
@@ -22,33 +24,43 @@ int value(std::string command){
     return val;
 }
 
-int createFileONGame(std::string PLID, std::string gword) {
+int createFileONGame(std::string PLID, std::string &wordhint) {
     std::ifstream file;
-    std::string path = "./ONGOING_GAMES/" + PLID + ".txt";
-    int cont;
+    std::string gword;
+    std::stringstream ss(wordhint);
+    std::string path = "./GAMES/GAME_" + PLID + ".txt";
+    int cont = 0;
 
     file.open(path);
     if(file.is_open()) {
         std::string data;
         while (file >> data) {
             cont++;
+            if (cont == 1) {
+                gword = data;
+            }
         }
-        if (cont == 1) {
+        if (cont == 2) {
+            wordhint = gword;
             file.close();
             return 0;
         } 
+        ss >> gword;
+        wordhint = gword;
         file.close();
         return 1;
     }
     else {
         std::ofstream new_file;
-        std::string name = "./ONGOING_GAMES/" + PLID + ".txt";
+        std::string name = "./GAMES/GAME_" + PLID + ".txt";
         new_file.open(name);
         if (new_file.is_open()) {
-            new_file << gword << "\n";
+            new_file << wordhint;
         } else {
             std::cout << "why is not opened\n";
         }
+        ss >> gword;
+        wordhint = gword;
         new_file.close();
         return 0;
     }
@@ -85,7 +97,7 @@ void error_message(std::string command, std::string PLID, int v_mode, int &fd, s
 
 void server_start(std::string word_file, std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
 
-    std::string word, gword;
+    std::string word, gword, hint;
     int err, num, nword, max_errors, n;
     int count = 1;
     time_t t;
@@ -101,12 +113,19 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
     while(ss >> word) {
         if (count == num) {
             gword = word;
+            std::cout << gword << std::endl;
+            ss >> word;
+            hint = word;
+            break;
         }
+        ss >> word;
         count++;
     }
-    std::cout << gword << std::endl;
-
-    n = createFileONGame(PLID, gword);
+   
+    std::cout << count << " " << gword << " " << hint << std::endl;
+    word = gword + " " + hint + "\n";
+    n = createFileONGame(PLID, word);
+    std::cout << "The word is " << word << std::endl;
     if (n == 1) {
         std::string msg = "RSG NOK\n";
         
@@ -115,7 +134,7 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         std::cout << msg << std::endl;
     } else if (n == 0) {
         
-        int word_size = gword.length();
+        int word_size = word.length();
         if (word_size <= 6) {
             max_errors = 7;
         } else if (word_size >= 7 && word_size <= 10) {
@@ -137,7 +156,7 @@ void searchOnFile(std::string PLID, std::string trial, int &fd, struct sockaddr_
     int err, cont;
     std::ifstream file;
     int ntrial = value(trial);
-    std::string path = "./ONGOING_GAMES/" + PLID + ".txt";
+     std::string path = "./GAMES/GAME_" + PLID + ".txt";
     file.open(path);
     if(file.is_open()) {
         std::string data;
@@ -160,15 +179,34 @@ void server_play(std::string PLID, std::string trial, int &fd, struct sockaddr_i
 void server_guess() {
 }
 
+std::string getTimeInString(std::string state) {
+    time_t now = time(0);
+    tm* ltm = localtime(&now);
+    int year = 1900 + ltm->tm_year;
+    int month = 1 + ltm->tm_mon;
+    int day = ltm->tm_mday;
+    int hour = 5 + ltm->tm_hour;
+    int minute = 30 + ltm->tm_min;
+    int second = ltm->tm_sec;
+    std::string date = std::to_string(year) + std::to_string(month) + std::to_string(day);
+    std::string time = std::to_string(hour) + std::to_string(minute) + std::to_string(second);
+    std::string dt = date + "_" + time + "_" + state;
+    return dt;
+}
 
 void server_quit(std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
     int err;
     std::ifstream file;
-    std::string path = "./ONGOING_GAMES/" + PLID + ".txt";
+    std::string path = "./GAMES/GAME_" + PLID + ".txt";
     file.open(path);
     if(file.is_open()) {
         file.close();
-        std::string new_path = "./FINISHED_GAMES/" + PLID + ".txt";
+        std::string dir = "./GAMES/" + PLID;
+        if (mkdir(dir.c_str(), 0777) == -1) {
+            //Directory Already Created
+        }
+        std::string new_name = getTimeInString("Q");
+        std::string new_path = "./GAMES/" + PLID + "/" + new_name + ".txt";
         rename(path.c_str(), new_path.c_str());
     } else {
         std::string msg = "RQT NOK\n";

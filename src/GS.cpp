@@ -23,8 +23,7 @@ std::string toString = "";
 void readFile(std::string name_file, std::string &word_file) {
     std::ifstream file;
     std::string data;
-    int count = 2;
-    int c = 0;
+    int count = 0;
     file.open(name_file);
     
     if(file.is_open()) {
@@ -32,14 +31,12 @@ void readFile(std::string name_file, std::string &word_file) {
         //int flength = file.tellg(); //getting the length through offset
         //file.seekg(0, file.beg);
         while (file >> data) {
-           if (count % 2 == 0) {
             word_file = word_file + data + " ";
-            c++;
-           }
-           count++;
+            count++;
         }
         //word_file = new char [flength];
         //file.read(word_file, flength);
+        int c = count/2;
         std::string nwords = std::to_string(c);
         word_file.insert(0, " ");
         word_file.insert(0, nwords);
@@ -154,10 +151,7 @@ int main (int argc, char **argv) {
             exit(EXIT_FAILURE);
     }
 
-    if (mkdir("ONGOING_GAMES", 0777) == -1) {
-        //Directory Already Created
-    }
-    if (mkdir("FINISHED_GAMES", 0777) == -1) {
+    if (mkdir("GAMES", 0777) == -1) {
         //Directory Already Created
     }
 
