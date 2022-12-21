@@ -1,4 +1,4 @@
-all: player
+all: player GS
 
 player: commands process_input connections
 	g++ -g -o player player.cpp commands.o process_input.o connections.o

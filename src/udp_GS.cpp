@@ -188,19 +188,18 @@ void udp_server(std::string word_file, std::string GSPort, int v_mode) {
     struct sockaddr_in addr;
     char buffer[128];
     std::string toString = "";
+    std::string b;
     
-    if(connectUDPServer(GSPort, fd, hints, res) == -1){
-        std::cout << "UDP server didn't connect\n";
-    }
+    connectUDPServer(GSPort, fd, hints, res);
 
     while(1) {
-
+        b.clear();
         addrlen = sizeof(addr);
         err = recvfrom(fd, buffer, 128, 0, (struct sockaddr*)&addr, &addrlen);
         if(err == -1) {
             std::cout << "Deu erro1\n" << strerror(errno);
         }
-        std::string b = toString + buffer;
+        b.append(buffer, 0, err);
         std::cout << b << "\n";
         std::stringstream ss(b);
         std::string m, type, PLID, letter, word, trial;

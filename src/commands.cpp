@@ -49,60 +49,6 @@ void readFile(std::string name_file, char *&word_file) {
     file.close();
 }
 
-void processFile(int fd, std::string type){
-    size_t n, extra;
-    char buffer[512];
-    std::string msg, fsize, filename;
-    std::string toString = "";
-
-    if((n = read(fd,buffer,512)) == -1){
-        std::cerr << "TCP read error 2 SB\n";
-    }
-
-    msg = toString + buffer;
-    std::stringstream ss(msg);
-
-    ss >> filename;
-    extra = filename.length() + 1;
-
-    std::ofstream sb(filename);
-    
-    ss >> fsize;
-    extra += fsize.length() + 1;
-
-    if(type == H || type == ST){
-        std::cout << "File name: " << filename << std::endl;
-        std::cout << "File size: " << fsize << std::endl;
-    }
-
-    extra++;
-    msg = msg.substr(extra , n - extra);
-    sb << msg;
-
-    if(type == SB || type == ST){
-        std::cout << msg;
-    }
-
-    while((n = read(fd,buffer,512)) != 0){
-        if(n == -1){
-            remove(filename.c_str());
-            std::cerr << "Error reading \n";
-            return;
-        }
-        msg = toString + buffer;
-        //msg = msg.substr(0,n);
-        sb << msg.substr(0,n);
-        if(type == SB || type == ST){
-            std::cout << msg;
-        }
-    }
-    std::cout << msg;
-    sb.close();
-
-    // char* word;
-    // readFile(filename, word);
-}
-
 void receiveTCPFile(int fd, std::string header[4]){
     int n, max_h = 0, size_h = 0, offset = 0;
     std::string header_str, arg;
@@ -114,8 +60,8 @@ void receiveTCPFile(int fd, std::string header[4]){
         offset += n;
     }
     if(n == -1){
-        std::cerr << "TCP read error\n";
-        return;
+        std::cerr << "TCP: read error\n";
+        exit(EXIT_FAILURE);
     }
 
     header_str.append(buffer, 0, n);
@@ -136,46 +82,12 @@ void receiveTCPFile(int fd, std::string header[4]){
         file.write(buffer, n*sizeof(char));
     }
     if(n == -1){
-        std::cerr << "TCP read error\n";
+        std::cerr << "TCP: read error\n";
         remove(header[2].c_str());
+        exit(EXIT_FAILURE);
     }
     file.close();
 
-
-    // int n, msg_size = 0, size, offset = 0;
-    // char buffer[1024];
-    // std::vector<std::string> response;
-    // std::string buffer_str, word; 
-
-    // size = 43; // CMD(3B) + status(max 3B) + Fname(max 24B) + Fsize(max 10B) + spaces(3B) = 43
-
-    // while(size > 0 && (n = read(fd, buffer+offset, size)) > 0) {
-    //     size -= n;
-    //     offset += n;
-        
-    // }
-    // if(n == -1) { response.push_back("err"); return; }
-
-    // buffer_str.append(buffer, 0, n);
-
-    // std::stringstream ss(buffer_str);
-
-    // for(int i = 0; i < 4; i++) {
-    //     getline(ss, word, ' ');
-    //     response.push_back(word);
-    //     if(word == "NOK") { return; }
-    //     msg_size += word.size() + 1;
-    // }
-
-    // std::ofstream file(response[2], std::ios::out | std::ios::binary);
-
-    // file.write(buffer + msg_size, (43 - msg_size)*sizeof(char));
-
-    // while((n = read(fd, buffer, 1024)) > 0) {
-    //     file.write(buffer, n*sizeof(char));
-    // }
-
-    // file.close();
 }
 
 void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
@@ -191,10 +103,16 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
 
     std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
-    if(err == -1) std::cout << "Deu erro\n";
+    if(err == -1){
+        std::cout << "start: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 
     err = recvfrom(fd,buffer,128,0, (struct sockaddr*)&addr,&addrlen);
-    if(err == -1) std::cout << "Deu erro1\n";
+    if(err == -1){
+        std::cout << "start: UDP: recvfrom error\n";
+        exit(EXIT_FAILURE);
+    }
 
     std::string b = toString + buffer;
     std::cout << b << "\n";
@@ -244,10 +162,16 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
 
     std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
-    if(err == -1) std::cout << "Deu erro\n";
+    if(err == -1){
+        std::cout << "play: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 
     err = recvfrom(fd,buffer,128,0, (struct sockaddr*)&addr,&addrlen);
-    if(err == -1) std::cout << "Deu erro1\n";
+    if(err == -1){
+        std::cout << "play: UDP: recvfrom error\n";
+        exit(EXIT_FAILURE);
+    }
 
     std::string b = toString + buffer;
     std::cout << b << "\n";
@@ -334,10 +258,16 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
 
     std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
-    if(err == -1) std::cout << "Deu erro\n";
+    if(err == -1){
+        std::cout << "guess: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 
     err = recvfrom(fd,buffer,128,0, (struct sockaddr*)&addr,&addrlen);
-    if(err == -1) std::cout << "Deu erro1\n";
+    if(err == -1){
+        std::cout << "guess: UDP: recvfrom error\n";
+        exit(EXIT_FAILURE);
+    }
 
     std::string b = toString + buffer;
     std::cout << b << "\n";
@@ -392,7 +322,8 @@ void scoreboard(std::string GSIP, std::string GSPort){
     connectTCPClient(GSIP, GSPort, fd, hints, res);
 
     if(write(fd,"GSB\n",4) == -1){
-        std::cerr << "TCP write error SB\n";
+        std::cerr << "scoreboard: TCP: write error SB\n";
+        exit(EXIT_FAILURE);
     }
 
     receiveTCPFile(fd, header);
@@ -415,13 +346,14 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
     msg = "GHL " + PLID + "\n";
 
     if(write(fd,msg.c_str(),msg.length()) == -1){
-        std::cerr << "TCP write error\n";
+        std::cerr << "hint: TCP: write error\n";
+        exit(EXIT_FAILURE);
     }
 
     receiveTCPFile(fd, header);
 
     if(header[1] == "NOK"){
-        std::cerr << "No hints for this word\n";
+        std::cout << "No hints for this word\n";
         return;
     }
 
@@ -443,7 +375,8 @@ void state(std::string GSIP, std::string GSPort, std::string PLID){
     msg = "STA " + PLID + "\n";
 
     if(write(fd,msg.c_str(),msg.length()) == -1){
-        std::cerr << "TCP write error SB\n";
+        std::cerr << "status: TCP: write error SB\n";
+        exit(EXIT_FAILURE);
     }
 
     receiveTCPFile(fd, header);
@@ -473,10 +406,17 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
     addrlen = sizeof(addr);
 
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
-    if(err == -1) std::cout << "Deu erro\n";
+    if(err == -1){
+        std::cout << "quit: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 
     err = recvfrom(fd,buffer,128,0, (struct sockaddr*)&addr,&addrlen);
-    if(err == -1) std::cout << "Deu erro1\n";
+    if(err == -1){
+        std::cout << "quit: UDP: recvfrom error\n";
+        exit(EXIT_FAILURE);
+    }
+
     std::string b = toString + buffer;
     std::cout << b << "\n";
     std::stringstream ss(b);

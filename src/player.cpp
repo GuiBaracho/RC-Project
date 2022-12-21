@@ -72,9 +72,7 @@ int main(int argc, char **argv){
     // }
     // exit(0);
 
-    if(connectUDPClient(GSIP, GSPort, fd, hints, res) == -1){
-        _exit();
-    }
+    connectUDPClient(GSIP, GSPort, fd, hints, res);
     
     while(1){
         std::getline (std::cin, buffer);
