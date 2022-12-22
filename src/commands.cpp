@@ -74,12 +74,12 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
         i++;
     }
     if(i != 4){
-        std::cerr << "TCP: Syntax of response incorrect\n";
+        std::cerr << "TCP: Syntax of response incorrect1\n";
         return -1;
     }
 
     if(header[0] != type){
-        std::cerr << "TCP: Syntax of response incorrect\n";
+        std::cerr << "TCP: Syntax of response incorrect2\n";
         return -1;
     }
 
@@ -95,8 +95,8 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
             return -1;
         }
     } else if(type == ST){
-        if(header[1] == "EMPTY"){
-            std::cout << "Scoreboard is empty\n";
+        if(header[1] == "NOK"){
+            std::cout << "No data avilable\n";
             return -1;
         }
     }

@@ -84,3 +84,42 @@ void connectUDPServer(std::string GSPort, int &fd, struct addrinfo &hints, struc
         exit(EXIT_FAILURE);
     }
 }
+
+void connectTCPServer(std::string GSPort, int &fd, struct addrinfo &hints, struct addrinfo *&res){
+    int err, n;
+
+    fd = socket(AF_INET,SOCK_STREAM,0);
+    if(fd == -1){
+        std::cerr << "server: TCP: socket creation error\n";
+        exit(EXIT_FAILURE);
+    }
+
+    memset(&hints,0,sizeof hints);
+    hints.ai_family=AF_INET;
+    hints.ai_socktype=SOCK_STREAM;
+    hints.ai_flags=AI_PASSIVE;
+
+    err = getaddrinfo(NULL,GSPort.c_str(),&hints,&res);
+    if(err != 0){
+        std::cerr << "server: TCP: setsockopt error: " << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+
+    int reuse = 1;
+    err = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)); //SO WE ARE ABLE TO REUSE THE PORT
+    if(err == -1){
+        std::cerr << "server: TCP: setsockopt error: " << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+
+    n = bind(fd,res->ai_addr,res->ai_addrlen);
+    if(n == -1){
+        std::cerr << "server: TCP: bind error: " << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if(listen(fd, 5) == -1){
+        std::cerr << "server: TCP: listen error: " << strerror(errno) << "\n";
+        exit(EXIT_FAILURE);
+    }
+}
