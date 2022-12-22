@@ -35,7 +35,6 @@ void read_wfile(std::string name_file, std::string &word_file) {
         std::string nwords = std::to_string(c);
         word_file.insert(0, " ");
         word_file.insert(0, nwords);
-
     }
     else {
         std::cout << "Following file " << name_file << " doesn't exist" << std::endl;

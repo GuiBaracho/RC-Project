@@ -420,9 +420,9 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
 
     ss >> word;
     nword = get_val(word);
-    num = seq++;//(rand() % nword) + 1;
+    seq++;//(rand() % nword) + 1;
     while(ss >> word) {
-        if (count == num) {
+        if (count == seq) {
             gword = word;
             ss >> word;
             hint = word;
@@ -431,6 +431,7 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         ss >> word;
         count++;
     }
+    std::cout << gword << " " << hint << std::endl;
 
     word = gword + " " + hint + "\n";
     n = createFile(PLID, word);
