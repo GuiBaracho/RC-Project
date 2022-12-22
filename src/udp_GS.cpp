@@ -420,7 +420,7 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
 
     ss >> word;
     nword = get_val(word);
-    seq++;//(rand() % nword) + 1;
+    seq++; // seq =(rand() % nword) + 1 if needed to make it random;
     while(ss >> word) {
         if (count == seq) {
             gword = word;
@@ -430,6 +430,9 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         }
         ss >> word;
         count++;
+    }
+    if (seq == 26) {
+        seq = 0;
     }
     std::cout << gword << " " << hint << std::endl;
 
