@@ -221,7 +221,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
 
     while(ss >> m){
         if (counter == 1 && m == "ERR") {
-            std::cout << "Error" << "\n";
+            std::cout << "Error, missing PLID or invalid syntax" << "\n";
             return;
         }
         else if (counter == 2) {
