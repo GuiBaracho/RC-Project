@@ -69,7 +69,7 @@ std::string getTimeInString(std::string state) {
 void error_message(std::string command, std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
     int err;
     std::string msg;
-    if (command == "SNG" || command == "PLG" || command == "PWG" || command == "QUT") {
+    if (command == "SNG") {
         msg = "RSG ERR\n";
     } else if (command == "PLG") {
         msg = "RLG ERR\n";
@@ -79,13 +79,13 @@ void error_message(std::string command, std::string PLID, int &fd, struct sockad
         msg = "RQT ERR\n";
     } else {
         msg = "ERR\n";
-        if (v_mode = 1) {
-            std::cout << "The following incorrect type of request " << command << " was received\n";
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": The request " << command << " doesn't exist\n";
         }
     }
     if (msg != "ERR\n") {
-        if (v_mode = 1) {
-            std::cout << "The following type of request " << command << " was received from PLID " << PLID << " with syntax errors\n";
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": The request " << command << " has syntax errors\n";
         }
     }
     err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -220,7 +220,6 @@ void moveToDone(std::string type, std::string PLID) {
     }
 }
 
-
 void writeFile(std::string type, std::string PLID, std::string guess) {
     std::string msg = type + " " + guess + "\n";
     std::ofstream file;
@@ -231,7 +230,6 @@ void writeFile(std::string type, std::string PLID, std::string guess) {
         std::string data;
         file << msg;
     }
-
     file.close();
 }
 
@@ -286,6 +284,11 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
         max_errors = calculate_maxerrors(word);
         ntrial = cont/2 + 1;
         if (max_errors < errors) {
+            if (v_mode == 1 && type == "RLG") {
+                std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - miss (max errors reached; game over)\n";
+            } else if (v_mode == 1 && type == "RWG") {
+                std::cout << "PLID = " << PLID << ": guess word: '" << letter << "' - miss (max errors reached; game over)\n";
+            }
             msg = type + " OVR " + std::to_string(ntrial) + "\n";
             err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
             if(err == -1) {
@@ -302,6 +305,11 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
             return 1;
         }
         if (dupe == 1) {
+            if (v_mode == 1 && type == "RLG") {
+                std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - duplicated\n";
+            } else if (v_mode == 1 && type == "RWG") {
+                std::cout << "PLID = " << PLID << ": guess word: '" << letter << "' - duplicated\n";
+            }
             msg = type + " DUP " + std::to_string(ntrial-1) + "\n";
             err = sendto(fd, msg.c_str(), msg.length(), 0, (struct sockaddr*) &addr, addrlen);
             if(err == -1) {
@@ -311,6 +319,11 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
             return 1;
         } 
         else if (ntrial != get_val(trial)) {
+            if (v_mode == 1 && type == "RLG") {
+                std::cout << "PLID = " << PLID << ": play letter: '" << word << "' - invalid trial\n";
+            } else if (v_mode == 1 && type == "RWG") {
+                std::cout << "PLID = " << PLID << ": guess word: '" << word << "' - invalid trial\n";
+            }
             msg = type + " INV " + std::to_string(ntrial-1) + "\n";
             err = sendto(fd, msg.c_str(), msg.length(), 0, (struct sockaddr*) &addr, addrlen);
             if(err == -1) {
@@ -322,6 +335,11 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
         return 0;
     }
     else { 
+        if (v_mode == 1 && type == "RLG") {
+            std::cout << "PLID = " << PLID << ": play letter: '" << word << "' - ERR (no ongoing game)\n";
+        } else if (v_mode == 1 && type == "RWG") {
+            std::cout << "PLID = " << PLID << ": guess word: '" << word << "' - ERR (no ongoing game)\n";
+        }
         std::string msg = type + " ERR\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
@@ -357,6 +375,9 @@ int win_play(std::string PLID, std::string trial, std::string letter, int &fd, s
             code = data;
         }
     } else {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - ERR (no ongoing game)\n";
+        }
         std::string msg = "RLG ERR\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         return 1;
@@ -367,6 +388,9 @@ int win_play(std::string PLID, std::string trial, std::string letter, int &fd, s
         }
     }
     if(match == size) {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - WIN (game ended)\n";
+        }
         msg = "RLG WIN " + trial + "\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
@@ -404,12 +428,14 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         ss >> word;
         count++;
     }
-   
-    std::cout << count << " " << gword << " " << hint << std::endl;
+
     word = gword + " " + hint + "\n";
     n = createFile(PLID, word);
-    std::cout << "The word is " << word << std::endl;
+    int word_size = word.length();
     if (n == 1) {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": New Game: There is already one ongoing: Word = '" << word << "' (" << word_size << " letters)\n";
+        }
         std::string msg = "RSG NOK\n";
         
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -420,9 +446,10 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         std::cout << msg << std::endl;
 
     } else if (n == 0) {
-        int word_size = word.length();
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": New Game: Word = '" << word << "' (" << word_size << " letters)\n";
+        }
         max_errors = calculate_maxerrors(word);
-
         std::string msg = "RSG OK " + std::to_string(word_size) + " " + std::to_string(max_errors) + "\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
@@ -462,6 +489,9 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
         }
     }
     if (ok > 0) {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - " << ok << " hits (word not guessed)\n";
+        }
         std::string add = "RLG OK " + trial + " " + std::to_string(ok) + msg + "\n";
         std::cout << add << std::endl;
         err = sendto(fd,add.c_str(),add.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -471,6 +501,9 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
         }
         writeFile("T", PLID, letter);
     } else {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - miss\n";
+        }
         msg = "RLG NOK " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -490,8 +523,12 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
     int ok = 0;
     int size = gword.length();
 
+    //Verifying that the word doesn't have numbers
     for (int i = 0; i < size; i++) {
         if (isdigit(gword[i]) == true) {
+            if (v_mode == 1) {
+                std::cout << "PLID = " << PLID << ": guess word: '" << gword << "' - ERR (word has numbers)\n";
+            }
             msg = "RWG ERR\n";
             std::cout << msg << std::endl;
             err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -508,6 +545,9 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
         return;
     }
     if (strcasecmp(word.c_str(), gword.c_str()) == 0) {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": guess word: '" << gword << "' - WIN (game ended)\n";
+        }
         msg = "RWG WIN " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -518,6 +558,9 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
         writeFile("G", PLID, gword);
         moveToDone("W", PLID);
     } else {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": guess word: '" << gword << "' - MISS\n";
+        }
         msg = "RWG NOK " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -538,6 +581,9 @@ void server_quit(std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t 
         file.close();
         moveToDone("Q", PLID);
     } else {
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": quit: there is no ongoing game to quit\n";
+        }
         std::string msg = "RQT NOK\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
@@ -545,6 +591,9 @@ void server_quit(std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t 
             exit(EXIT_FAILURE);
         }
         return;
+    }
+    if (v_mode == 1) {
+        std::cout << "PLID = " << PLID << ": quit: ongoing game quit\n";
     }
     std::string msg = "RQT OK\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
@@ -576,11 +625,9 @@ void udp_server(std::string word_file, std::string GSPort, int v) {
             exit(EXIT_FAILURE);
         }
         b.append(buffer, 0, err);
-        if (v_mode = 1) {
-            std::cout << b << "\n";
-        }
         std::stringstream ss(b);
-        std::string m, type, PLID, letter, word, trial;
+        std::string PLID = "";
+        std::string m, type, letter, word, trial;
         int size;
         int counter = 0;
         
