@@ -116,7 +116,7 @@ int main (int argc, char **argv) {
     std::string GSPort = DEFAULT_PORT;
     std::string argv1, argv2, argv3, argv4, buffer;
     std::string word, PLID;
-    
+    SCORELIST list;
     
     std::string word_file;
     int v_mode = 0;
@@ -156,8 +156,9 @@ int main (int argc, char **argv) {
     std::cout << GSPort << std::endl;
 
     if (fork() == 0) {
-        tcp_server(word_file, GSPort);
+        tcp_server(&list, GSPort);
     } else if(fork() > 0) {
         udp_server(word_file, GSPort, v_mode);
     }
+    return 0;
 }
