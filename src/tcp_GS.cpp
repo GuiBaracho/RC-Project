@@ -20,6 +20,8 @@
 #define TITLE "-------------------------------- TOP 10 SCORES --------------------------------"
 #define SB_HEADER "    SCORE PLAYER     WORD                             GOOD TRIALS  TOTAL TRIALS"
 
+int v_mode;
+
 std::string addSpaces(int n){
     std::cout << "Fucn: addSpaces\n";
     std::string space;
@@ -167,7 +169,9 @@ int server_hint(int fd, std::string PLID, std::string &fname, int &flength, std:
     if (file.is_open()){
         getline(file, line);
     } else {
-        std::cout << "Following file " << name << "doesn't exist" << std::endl;
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": hint: there isn't an ongoing game\n";
+        }
         send = "RHL NOK\n";
         n = write(fd,send.c_str(),send.length());
         if(n == -1){
@@ -214,6 +218,9 @@ int server_hint(int fd, std::string PLID, std::string &fname, int &flength, std:
     }
     msg.close();
     n = write(fd,"\n",1);
+    if (v_mode == 1) {
+        std::cout << "PLID = " << PLID << ": hint: send hint file '" << IMGname << "'\n";
+    }
     if(n == -1){
         std::cerr << "server: TCP: write error\n";
         exit(EXIT_FAILURE);
@@ -230,10 +237,16 @@ int server_scoreboard(int fd, SCORELIST* list){
 
     if(n_scores == 0){
         write_TCP(fd, "RSB EMPTY\n");
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": scoreboard: scoreboard is empty\n";
+        }
         return -1;
     } else {
         msg = "RSB OK TOPSCORES.txt " + std::to_string(80*n_scores + 1) + " " + TITLE+ "\n" + SB_HEADER + "\n";
         write_TCP(fd, msg);
+        if (v_mode == 1) {
+            std::cout << "PLID = " << PLID << ": scoreboard: send scoreboard file TOPSCORES.txt\n";
+        }
         std::cout << "n: " << n_scores << "\n";
         for(int i = 0; i < n_scores; i++){
             //std::cout << "n:1 "<<place(i+1)<< "\n";
@@ -287,8 +300,7 @@ void handleTCP(int fd, SCORELIST* list){
     close(fd);
 }
 
-
-void tcp_server(SCORELIST* list, std::string GSPort) {
+void tcp_server(SCORELIST* list, std::string GSPort, int v) {
     std::cout << "Hello from tcp" << std::endl;
     int fd, newfd, err, n;
     socklen_t addrlen;
@@ -296,6 +308,7 @@ void tcp_server(SCORELIST* list, std::string GSPort) {
     struct sockaddr_in addr;
     char buffer[128];
     std::string b;
+    v_mode = v;
 
     connectTCPServer(GSPort, fd, hints, res);
 

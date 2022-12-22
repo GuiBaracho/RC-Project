@@ -153,7 +153,7 @@ int main (int argc, char **argv) {
     }
 
     if (fork() == 0) {
-        tcp_server(&list, GSPort);
+        tcp_server(&list, GSPort, v_mode);
     } else if(fork() > 0) {
         udp_server(word_file, GSPort, v_mode);
     }

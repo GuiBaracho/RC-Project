@@ -14,8 +14,7 @@
 #include <fstream>
 #include <ctime>
 #include <cmath>
-#include <dirent.h>
-#include <algorithm>  
+#include <dirent.h> 
 
 #include "connections.h"
 #include "udp_GS.h"
@@ -97,20 +96,18 @@ void create_stateFIN(std::string PLID, std::string name) {
 }
 
 void lastGame(std::string PLID) {
-
     DIR *dir;
     struct dirent *ent;
     std::string d = "./GAMES/" + PLID;
     int maxi = 0, maxid = 0;
     std::string highname;
+    std::string toString = "";
     if ((dir = opendir (d.c_str())) != NULL) {
-    /* print all the files and directories within directory */
         while ((ent = readdir (dir)) != NULL) {
-            std::string name = ent->d_name;
+            std::string name = ent->d_name + toString;
             if (name == "." || name == "..") {
                 continue;
             }
-            std::cout << name << std::endl;
             std::string d = name.substr(0,8);
             int v = std::stoi(d);
             if (v > maxid) {
@@ -125,20 +122,14 @@ void lastGame(std::string PLID) {
                     highname = name;
                     continue;
                 } else {
-                    //Same numbers;
-                    continue;
+                    continue; //Same numbers;
                 }
-            } else {
-                //Same numbers
-                continue;
             }
         }
-    std::cout << highname << std::endl;
     create_stateFIN(PLID, highname);
     closedir (dir);
-    
     } else {
-    /* could not open directory */
+        /* could not open directory */
     }
 }
 

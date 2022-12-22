@@ -15,6 +15,6 @@ struct SCORELIST
 int FindLastGame(const char* PLID, char* fname);
 void server_hint(int fd, std::string PLID, std::string &send);
 void handleTCP(int fd, SCORELIST* list);
-void tcp_server(SCORELIST* list, std::string GSPort);
+void tcp_server(SCORELIST* list, std::string GSPort, int v);
 
 #endif

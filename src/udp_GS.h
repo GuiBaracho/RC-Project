@@ -2,6 +2,9 @@
 #define _UDP_GS_
 
 int value(std::string command);
+void create_stateFIN(std::string PLID, std::string name);
+void lastGame(std::string PLID);
+void create_state(std::string PLID);
 int calculate_maxerrors(std::string word);
 std::string toStringT(int dt);
 std::string getTimeInString(std::string state);
