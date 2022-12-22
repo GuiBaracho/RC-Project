@@ -4,7 +4,7 @@ player: commands process_input connections
 	g++ -g -o player player.cpp commands.o process_input.o connections.o
 
 GS: udp_GS tcp_GS
-	g++ -g -o GS GS.cpp udp_GS.o tcp_GS.o connections.o
+	g++ -Wall -g -o GS GS.cpp udp_GS.o tcp_GS.o connections.o
 
 udp_GS:
 	g++ -o udp_GS.o -c udp_GS.cpp

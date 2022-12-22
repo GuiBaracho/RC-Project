@@ -158,7 +158,7 @@ int main (int argc, char **argv) {
     std::cout << GSPort << std::endl;
 
     if (fork() == 0) {
-        tcp_server(GSPort);
+        tcp_server(word_file, GSPort);
     } else {
         udp_server(word_file, GSPort, v_mode);
     }
