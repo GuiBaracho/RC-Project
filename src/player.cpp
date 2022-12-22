@@ -19,21 +19,12 @@
 #define DEFAULT_IP "localhost"
 #define DEFAULT_PORT "58018"
 
-
-//int val(std::string command){
-    //std::stringstream ss;
-    //int val;
-    //ss << command;
-    //ss >> val;
-    //return val;
-//}
-
 int main(int argc, char **argv){
     int fd, trial;
     std::string GSIP = DEFAULT_IP;
     std::string GSPort = DEFAULT_PORT;
     std::string argv1, argv2, argv3, argv4, buffer;
-    std::string word = " ", PLID;
+    std::string word, PLID;
     ssize_t n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
@@ -66,12 +57,6 @@ int main(int argc, char **argv){
     std::cout << GSIP << "\n";
     std::cout << GSPort << "\n";
 
-    // std::string teste = "123";
-    // if(isdigit(teste[2])){
-    //     std::cout << stoi(teste) + 1 << "\n";
-    // }
-    // exit(0);
-
     connectUDPClient(GSIP, GSPort, fd, hints, res);
     
     while(1){
@@ -81,8 +66,7 @@ int main(int argc, char **argv){
         ss >> command;
 
         if (command == "start" | command == "sg"){
-            if(ss >> command){
-                //word = " ";
+            if(ss >> command) {
                 start(command, word, fd, res);
                 if (command != "-1") {
                     if(PLID != command){
@@ -93,11 +77,13 @@ int main(int argc, char **argv){
             }
         } else if (command == "play" | command == "pl"){
             char command;
-            ss >> command;
-            play(PLID, command, trial, word, fd, res);
+            if (ss >> command) {
+                play(PLID, command, trial, word, fd, res);
+            }
         } else if (command == "guess" | command == "gw"){
-            ss >> command;
-            guess(PLID, command, trial, fd, res);
+            if (ss >> command) {
+                guess(PLID, command, trial, fd, res);
+            }
         } else if (command == "scoreboard" | command == "sb"){
             scoreboard(GSIP, GSPort);
         } else if (command == "hint" | command == "h"){
@@ -107,7 +93,7 @@ int main(int argc, char **argv){
         } else if (command == "quit"){
             quit(PLID, fd, res);
             trial = 0;
-            word = " ";
+            word.clear();
         } else if (command == "exit"){
             quit(PLID, fd, res);
             freeaddrinfo(res);

@@ -132,7 +132,7 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     int counter = 1;
     std::string nletter, nerror, w;
     std::string msg = "SNG " + PLID + "\n";
-    std::string toString = "";
+    std::string b;
     addrlen = sizeof(addr);
 
     std::cout << msg <<"\n";
@@ -148,7 +148,7 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
         exit(EXIT_FAILURE);
     }
 
-    std::string b = toString + buffer;
+    b.append(buffer, 0, err);
     std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
@@ -191,7 +191,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
     std::string status;
     std::string ntrial = std::to_string(trial+1);
     std::string msg = "PLG " + PLID + " " + letter + " " + ntrial + "\n";
-    std::string toString = "";
+    std::string b;
     addrlen = sizeof(addr);
 
     std::cout << msg <<"\n";
@@ -207,7 +207,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
         exit(EXIT_FAILURE);
     }
 
-    std::string b = toString + buffer;
+    b.append(buffer, 0, err);
     std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
@@ -287,7 +287,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     std::string status;
     std::string ntrial = std::to_string(trial+1);
     std::string msg = "PWG " + PLID + " " + gword + " " + ntrial + "\n";
-    std::string toString = "";
+    std::string b;
     addrlen = sizeof(addr);
 
     std::cout << msg <<"\n";
@@ -303,7 +303,7 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
         exit(EXIT_FAILURE);
     }
 
-    std::string b = toString + buffer;
+    b.append(buffer, 0, err);
     std::cout << b << "\n";
      
     std::stringstream ss(b);
@@ -350,8 +350,6 @@ void scoreboard(std::string GSIP, std::string GSPort){
     size_t n, extra;
     struct addrinfo hints, *res;
     std::string header[4] = {"", "", "", ""};
-    std::string toString = "";
-    char buffer[128];
 
     connectTCPClient(GSIP, GSPort, fd, hints, res);
 
@@ -436,7 +434,7 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
     socklen_t addrlen;
     char buffer[128];
     std::string msg = "QUT " + PLID + "\n";
-    std::string toString = "";
+    std::string b;
     addrlen = sizeof(addr);
 
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
@@ -451,7 +449,7 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
         exit(EXIT_FAILURE);
     }
 
-    std::string b = toString + buffer;
+    b.append(buffer, 0, err);
     std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;

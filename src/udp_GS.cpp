@@ -13,8 +13,11 @@
 #include <sstream>
 #include <fstream>
 #include <ctime>
+#include <cmath>
 
 #include "connections.h"
+
+int v_mode;
 
 int value(std::string command){
     std::stringstream ss;
@@ -122,7 +125,7 @@ int createFile(std::string PLID, std::string &wordhint) {
         if (new_file.is_open()) {
             new_file << wordhint;
         } else {
-            std::cout << "why is not opened\n";
+            //it will create it if it doesn't exist so this shouldn't happen 
         }
         ss >> gword;
         wordhint = gword;
@@ -130,6 +133,74 @@ int createFile(std::string PLID, std::string &wordhint) {
         return 0;
     }
     return -1;
+}
+
+std::string createScore(std::string path, std::string &word, std::string &n_succ, std::string &n_trials) {
+    int size, ntrials;
+    int n = 0;
+    int nsucc = 0;
+    float score, nt;
+    std::ifstream file;
+    std::string code, s;
+    file.open(path);
+
+    if(file.is_open()) {
+        std::string data;
+        file >> word;
+        file >> data;
+        size = word.length();
+        while (file >> data) {
+            n++;
+            if (n % 2 == 0 && code == "T") {
+                for (int i = 0; i < size; i++) {
+                    if (tolower(word[i]) == tolower(data[0])) {
+                        nsucc++;
+                        break; }
+                }
+            }
+            if (n % 2 == 0 && code == "G") {
+                if (strcasecmp(word.c_str(), data.c_str()) == 0) {
+                    nsucc++;
+                }
+            }
+            code = data; 
+        }
+    }
+    file.close();
+    nt = n/2;
+    ntrials = n/2;
+    score = (nsucc/nt);
+    int fscore = round(score * 100);
+    if (fscore < 10) {
+        s = std::to_string(0) + std::to_string(0) + std::to_string(fscore);
+    } else if (fscore < 100) {
+        s = std::to_string(0) + std::to_string(fscore);
+    } else {
+        s = std::to_string(fscore);
+    }
+    n_succ = std::to_string(nsucc);
+    n_trials = std::to_string(ntrials);
+    return s;
+}
+
+void createScoreFile(std::string PLID, std::string path, std::string date) {
+    std::string score, word, n_succ, n_trials;
+    std::string year = date.substr(0, 4);
+    std::string month = date.substr(4, 2);
+    std::string day = date.substr(6, 2);
+    std::string time = date.substr(9, 6);
+    std::string d = day + month + year + "_" + time;
+
+    score = createScore(path, word, n_succ, n_trials);
+    std::string s_path = "./SCORES/" + score + "_" + PLID + "_" + d + ".txt";
+
+    std::string msg = score + " " + PLID + " " + word + " " + n_succ + " " + n_trials + "\n";
+    std::ofstream file;
+    file.open(s_path);
+    if(file.is_open()) {
+        file << msg;
+    }
+    file.close();
 }
 
 void moveToDone(std::string type, std::string PLID) {
@@ -141,7 +212,11 @@ void moveToDone(std::string type, std::string PLID) {
     std::string new_name = getTimeInString(type);
     std::string new_path = "./GAMES/" + PLID + "/" + new_name + ".txt";
     rename(path.c_str(), new_path.c_str());
+    if (type == "W") {
+        createScoreFile(PLID, new_path, new_name);
+    }
 }
+
 
 void writeFile(std::string type, std::string PLID, std::string guess) {
     std::string msg = type + " " + guess + "\n";
@@ -162,7 +237,6 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
     int cont = 0;
     int dupe = 0;
     int errors = 0;
-    int match = 0;
     std::ifstream file;
     ntrial = value(trial);
     std::string msg, code;
@@ -175,7 +249,6 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
         file >> data;
         size = word.length();
         while (file >> data) {
-            std::cout << "the data is: " << data << std::endl;
             cont++;
             if (cont % 2 == 0) {
                 if (strcasecmp(letter.c_str(), data.c_str()) == 0) {
@@ -185,7 +258,6 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
                     for (int i = 0; i < size; i++) {
                         if (tolower(word[i]) == tolower(data[0])) {
                             errors --;
-                            match++;
                             break;
                         }
                     }
@@ -196,11 +268,10 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
             }
             code = data;
         }
+        file.close();
         if (type == "RLG") {
             for (int i = 0; i < size; i++) {
                 if (tolower(word[i]) == tolower(letter[0])) {
-                    std::cout << "errors2: " << errors << std::endl;
-                    errors--;
                     break;
                 }
             }
@@ -209,13 +280,15 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
             if (strcasecmp(word.c_str(), letter.c_str()) != 0) {
                 errors++; }
         }
-        
         max_errors = calculate_maxerrors(word);
-        std::cout << "the max is " << max_errors << "but we have: " << errors << std::endl;
         ntrial = cont/2 + 1;
         if (max_errors < errors) {
             msg = type + " OVR " + std::to_string(ntrial) + "\n";
             err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+            if(err == -1) {
+                std::cout << "server: UDP: sendto error\n";
+                exit(EXIT_FAILURE);
+            }
             file.close();
             if (type == "RLG")  {
                 writeFile("T", PLID, letter);
@@ -227,24 +300,83 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
         }
         if (dupe == 1) {
             msg = type + " DUP " + std::to_string(ntrial-1) + "\n";
-            err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
-            file.close();
+            err = sendto(fd, msg.c_str(), msg.length(), 0, (struct sockaddr*) &addr, addrlen);
+            if(err == -1) {
+                std::cout << "server: UDP: sendto error\n";
+                exit(EXIT_FAILURE);
+            }
             return 1;
         } 
         else if (ntrial != value(trial)) {
             msg = type + " INV " + std::to_string(ntrial-1) + "\n";
-            err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
-            file.close();
+            err = sendto(fd, msg.c_str(), msg.length(), 0, (struct sockaddr*) &addr, addrlen);
+            if(err == -1) {
+                std::cout << "server: UDP: sendto error\n";
+                exit(EXIT_FAILURE);
+            }
             return 1;
         }
-        file.close();
         return 0;
     }
     else { 
         std::string msg = type + " ERR\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         return 1;
     }
+}
+
+int win_play(std::string PLID, std::string trial, std::string letter, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
+    int size, err;
+    int count = 0;
+    int match = 0;
+    std::ifstream file;
+    std::string msg, code, word;
+    std::string path = "./GAMES/GAME_" + PLID + ".txt";
+    file.open(path);
+
+    if(file.is_open()) {
+        std::string data;
+        file >> word;
+        file >> data;
+        size = word.length();
+        while (file >> data) {
+            count++;
+            if (count % 2 == 0 && code == "T") {
+                for (int i = 0; i < size; i++) {
+                    if (tolower(word[i]) == tolower(data[0])) {
+                         match++; }
+                } 
+            }
+            code = data;
+        }
+    } else {
+        std::string msg = "RLG ERR\n";
+        err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        return 1;
+    }
+    for (int i = 0; i < size; i++) {
+        if (tolower(word[i]) == tolower(letter[0])) {
+            match++;
+        }
+    }
+    if(match == size) {
+        msg = "RLG WIN " + trial + "\n";
+        err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_play: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
+        writeFile("T", PLID, letter);
+        moveToDone("W", PLID);
+        file.close();
+        return 1;
+    }
+    file.close();
+    return 0;
 }
 
 void server_start(std::string word_file, std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
@@ -257,15 +389,11 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
     std::stringstream ss(word_file);
 
     ss >> word;
-    std::cout << "NUMBER OF WORDS " << word << std::endl;
     nword = value(word);
-    std::cout << nword << std::endl;
     num = (rand() % nword) + 1;
-    std::cout << "RANDOM NUMBER " << num << std::endl;
     while(ss >> word) {
         if (count == num) {
             gword = word;
-            std::cout << gword << std::endl;
             ss >> word;
             hint = word;
             break;
@@ -282,7 +410,10 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         std::string msg = "RSG NOK\n";
         
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
-        if(err == -1) std::cout << "Deu erro\n";
+        if(err == -1) {
+            std::cout << "server_start: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         std::cout << msg << std::endl;
 
     } else if (n == 0) {
@@ -291,11 +422,14 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
 
         std::string msg = "RSG OK " + std::to_string(word_size) + " " + std::to_string(max_errors) + "\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
-        if(err == -1) std::cout << "Deu erro\n";
+        if(err == -1) {
+            std::cout << "server_start: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
 
         std::cout << msg << "\n";
     }
-}
+} 
 
 void server_play(std::string PLID, std::string trial, std::string letter, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
     std::string word;
@@ -306,12 +440,17 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
         std::string msg = "RLG ERR\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_play: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         return;
     }
     err = searchOnFile("RLG", PLID, trial, word, letter, fd, addr, addrlen);
-    if (err == 1) {
-        return;
-    }
+    if (err == 1) return;
+    err = win_play(PLID, trial, letter, fd, addr, addrlen);
+    if (err == 1) return;
+
     int size = word.length();
     for (int i = 0; i < size ; i++) {
         if (tolower(word[i]) == tolower(letter[0])) {
@@ -323,11 +462,19 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
         std::string add = "RLG OK " + trial + " " + std::to_string(ok) + msg + "\n";
         std::cout << add << std::endl;
         err = sendto(fd,add.c_str(),add.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_play: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         writeFile("T", PLID, letter);
     } else {
         msg = "RLG NOK " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_play: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         writeFile("T", PLID, letter);
     }
     
@@ -345,6 +492,10 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
             msg = "RWG ERR\n";
             std::cout << msg << std::endl;
             err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+            if(err == -1) {
+                std::cout << "server_guess: UDP: sendto error\n";
+                exit(EXIT_FAILURE);
+            }
             return;
         }
     }
@@ -357,12 +508,20 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
         msg = "RWG WIN " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_guess: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         writeFile("G", PLID, gword);
         moveToDone("W", PLID);
     } else {
         msg = "RWG NOK " + trial + "\n";
         std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_guess: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         writeFile("G", PLID, gword);
     }
 }
@@ -378,22 +537,29 @@ void server_quit(std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t 
     } else {
         std::string msg = "RQT NOK\n";
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+        if(err == -1) {
+            std::cout << "server_quit: UDP: sendto error\n";
+            exit(EXIT_FAILURE);
+        }
         return;
     }
     std::string msg = "RQT OK\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
+    if(err == -1) {
+        std::cout << "server_quit: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 }
 
 
-void udp_server(std::string word_file, std::string GSPort, int v_mode) {
-    std::cout << "Hello from udp" << std::endl;
+void udp_server(std::string word_file, std::string GSPort, int v) {
     int fd, err, n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
     char buffer[128];
-    std::string toString = "";
     std::string b;
+    v_mode = v;
     
     connectUDPServer(GSPort, fd, hints, res);
 
@@ -403,22 +569,23 @@ void udp_server(std::string word_file, std::string GSPort, int v_mode) {
         addrlen = sizeof(addr);
         err = recvfrom(fd, buffer, 128, 0, (struct sockaddr*)&addr, &addrlen);
         if(err == -1) {
-            std::cout << "Deu erro1\n" << strerror(errno);
+            std::cout << "server: UDP: recvfrom error\n";
+            exit(EXIT_FAILURE);
         }
         b.append(buffer, 0, err);
-        std::cout << b << "\n";
+        if (v_mode = 1) {
+            std::cout << b << "\n";
+        }
         std::stringstream ss(b);
         std::string m, type, PLID, letter, word, trial;
         int size;
         int counter = 0;
         
         while(ss >> m) {
-            std::cout << m << std::endl;
             counter++;
             if (counter == 1) {
                 type = m;
                 if (!(type == "SNG" || type == "PLG" || type == "PWG" || type == "QUT")) {
-                    std::cout << type << "is wrong?" << std::endl;
                     n = 1;
                     break;
                 }
@@ -438,23 +605,29 @@ void udp_server(std::string word_file, std::string GSPort, int v_mode) {
             } else if (counter >= 3) {
                 if (type == "PLG" || type == "PWG") {
                     if (counter == 3 && type == "PLG") {
-                        letter = m;
-                        std::cout << "the letter is" << letter << std::endl;
+                        if (m.length() == 1) {
+                            letter = m;
+                        } else {
+                            n = 1;
+                            break;
+                        }
                     } else if (counter == 3 && type == "PWG") {
-                        word = m;
+                        if (m.length() >= 3) {
+                             word = m;
+                        } else {
+                            n = 1;
+                            break;
+                        }
                     } else if (counter == 4) {
                         trial = m;
                         break;
                     }
-                }
-                else {
-                    std::cout << "if it's here then fuck you" << std::endl;
+                } else {
                     n = 1;
                     break;
                 }
             }
         } 
-        std::cout << n << " and counter is " << counter << " and type is " << type << std::endl;
         if (n == 0) {
             if (type == "SNG" && counter == 2) {
                 server_start(word_file, PLID, fd, addr, addrlen);
