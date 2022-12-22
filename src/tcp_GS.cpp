@@ -229,6 +229,7 @@ int server_scoreboard(int fd, SCORELIST* list){
     n_scores = FindTopScores(list);
 
     if(n_scores == 0){
+        std::cout << "--------------------------- IM HERE" << "\n";
         write_TCP(fd, "RSB EMPTY\n");
         return -1;
     } else {

@@ -30,6 +30,23 @@ int val(std::string command){
     return val;
 }
 
+void read_TCP(int fd, std::string &arg, int b_size){
+    int n, b = 0;
+    char buffer[b_size];
+    std::string msg;
+    msg.clear();
+    while(b < b_size && (n = read(fd,buffer,b_size - b)) != -1){
+        msg.append(buffer, 0, n);
+        b += n;
+    }
+    if(n == -1){
+        std::cerr << "server: TCP: read error\n";
+        exit(EXIT_FAILURE);
+    }
+    std::stringstream ss(msg);
+    ss >> arg;
+}
+
 void readFile(std::string name_file, char *&word_file) {
     std::string data;
     std::ifstream file;
@@ -128,6 +145,104 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
         exit(EXIT_FAILURE);
     }
     file.close();
+    return 0;
+}
+
+int receiveTCPFile2(int fd, std::string header[4], std::string type){
+    int n, b = 0, fail_s;
+    char buffer[128];
+    std::string msg, byte;
+
+    read_TCP(fd, header[0], 4);
+
+    if(header[0] != type){
+        std::cerr << "TCP: wrong message received\n";
+        exit(EXIT_FAILURE);
+    }
+    std::cout << "TESTE1: " << header[0] << "\n";
+    header[1].clear();
+
+    while((n = read(fd,buffer,1)) != -1){
+        if(buffer[0] == '\n' || buffer[0] == ' '){
+            break;
+        }
+        header[1].append(buffer, 0, n);
+    }
+    if(n == -1){
+        std::cerr << "client: TCP: read error\n";
+        exit(EXIT_FAILURE);
+    }
+    if(type == SB){
+        if(header[1] == "EMPTY"){
+            std::cout << "The scoreboard is empty.\n";
+            return 0;
+        } else if (header[1] == "OK"){
+            std::cout << "Saiu certo.\n";
+        }else{
+            std::cerr << "client: TCP: wrong protocol message\n";
+            exit(EXIT_FAILURE);
+        }
+    } else if(type == H){
+        if(header[1] == "NOK"){
+            std::cout << "There are no hints for this word.\n";
+            return 0;
+        } else if (header[1] == "OK"){
+            std::cout << "Saiu certo.\n";
+        }else{
+            std::cerr << "client: TCP: wrong protocol message\n";
+            exit(EXIT_FAILURE);
+        }
+    } else if(type == ST){
+        if(header[1] == "NOK"){
+            std::cout << "There are no hints for this word.\n";
+            return 0;
+        } else if (header[1] == "ACT"){
+            std::cout << "Showing ongoing game.\n";
+        }else if(header[1] == "ACT"){
+            std::cout << "Showing last played game.\n";
+        }else{
+            std::cerr << "client: TCP: wrong protocol message\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+    for(int i = 2; i < 4; i++){
+        header[i] == " ";
+        while((n = read(fd,buffer,1)) != -1){
+            if(buffer[0] == ' '){break;}
+            header[i].append(buffer, 0, n);
+        }
+        if(n == -1){
+            std::cerr << "client: TCP: read error\n";
+            exit(EXIT_FAILURE);
+        } else if(header[i] == " "){
+            std::cerr << "client: TCP: incorrect syntax\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+    if(type == H || type == ST){
+        std::cout << "File Name: " << header[2] << std::endl;
+        std::cout << "File Size: " << header[3] << std::endl;
+    }
+    
+    
+    std::ofstream file(header[2]);
+    int flength = stoi(header[3]);
+    while((n = read(fd,buffer,128)) > 0){
+        file.write(buffer, n*sizeof(char));
+        printf("%.*s", n, buffer);
+        flength -= n;
+        if(flength <= 0){
+            break;
+        }
+    }
+    if(n == -1){
+        std::cerr << "TCP: read error\n";
+        remove(header[2].c_str());
+        exit(EXIT_FAILURE);
+    }
+    file.close();
+
+    std::cout << "passou: " <<  header[1] <<"\n";
     return 0;
 }
 
@@ -365,10 +480,10 @@ void scoreboard(std::string GSIP, std::string GSPort){
         exit(EXIT_FAILURE);
     }
 
-    receiveTCPFile(fd, header, SB);
+    receiveTCPFile2(fd, header, SB);
 
-    char* word;
-    readFile(header[2], word);
+    // char* word;
+    // readFile(header[2], word);
 
     freeaddrinfo(res);
     close(fd);
@@ -391,12 +506,8 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
 
     std::cout << msg << std::endl;
 
-    receiveTCPFile(fd, header, H);
+    receiveTCPFile2(fd, header, H);
 
-    if(header[1] == "NOK"){
-        std::cout << "No hints for this word\n";
-        return;
-    }
 
     std::cout << "File Name: " << header[2] << std::endl;
     std::cout << "File Size: " << header[3] << std::endl;
@@ -420,18 +531,11 @@ void state(std::string GSIP, std::string GSPort, std::string PLID){
         exit(EXIT_FAILURE);
     }
 
-    receiveTCPFile(fd, header, ST);
-
-    if(header[1] == "NOK"){
-        std::cerr << "No hints for this word\n";
-        return;
-    }
+    receiveTCPFile2(fd, header, ST);
 
     std::cout << "File Name: " << header[2] << std::endl;
     std::cout << "File Size: " << header[3] << std::endl;
 
-    char* word;
-    readFile(header[2], word);
 
     freeaddrinfo(res);
     close(fd);
