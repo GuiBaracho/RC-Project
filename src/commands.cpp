@@ -114,8 +114,13 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
     std::ofstream file(header[2]);
     file.write(buffer + size_h, (MAX_HEADER - size_h)*sizeof(char));
 
+    int flength = stoi(header[3]) - ((MAX_HEADER - size_h));
     while((n = read(fd,buffer,512)) > 0){
         file.write(buffer, n*sizeof(char));
+        flength -= n;
+        if(flength <= 0){
+            break;
+        }
     }
     if(n == -1){
         std::cerr << "TCP: read error\n";
@@ -270,7 +275,7 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
         return;
     }
     else if (status == "INV") {
-        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter.\nUse 'state' command to update trials." << "\n";
+        std::cout << "Trial number invalid or repeating the last PLG stored but with a different letter.\n" << "\n";
         return;
     }
     else if (status == "ERR") {
