@@ -71,6 +71,7 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
     std::string header_str, arg;
     char buffer[512];
 
+
     max_h = MAX_HEADER;
     while(max_h > 0 && (n = read(fd,buffer + offset,max_h)) > 0){
         max_h -= n;
@@ -101,7 +102,7 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
         std::cerr << "TCP: Syntax of response incorrect2\n";
         return -1;
     }
-
+    
 
     if(type == SB){
         if(header[1] == "EMPTY"){
