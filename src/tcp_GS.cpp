@@ -484,7 +484,7 @@ void server_state(int fd, std::string PLID) {
     }
     sfile.close();
     if (n == 0) {
-        send = "RST ACK " + fname + " " + std::to_string(flength) + " ";
+        send = "RST ACT " + fname + " " + std::to_string(flength) + " ";
     } else if (n == 1) {
         send = "RST FIN " + fname + " " + std::to_string(flength) + " ";
     }

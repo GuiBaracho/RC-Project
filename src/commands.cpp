@@ -199,10 +199,10 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
             return 0;
         } else if (header[1] == "ACT"){
             std::cout << "Showing ongoing game.\n";
-        }else if(header[1] == "ACT"){
+        }else if(header[1] == "FIN"){
             std::cout << "Showing last played game.\n";
         }else{
-            std::cerr << "client: TCP: wrong protocol message\n";
+            std::cerr << "client: TCP: wrong protocol message: " << header[1] << "\n";
             exit(EXIT_FAILURE);
         }
     }
@@ -483,9 +483,6 @@ void scoreboard(std::string GSIP, std::string GSPort){
 
     receiveTCPFile2(fd, header, SB);
 
-    // char* word;
-    // readFile(header[2], word);
-
     freeaddrinfo(res);
     close(fd);
 }
@@ -509,10 +506,6 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
 
     receiveTCPFile2(fd, header, H);
 
-
-    std::cout << "File Name: " << header[2] << std::endl;
-    std::cout << "File Size: " << header[3] << std::endl;
-
     freeaddrinfo(res);
     close(fd);
 }
@@ -533,10 +526,6 @@ void state(std::string GSIP, std::string GSPort, std::string PLID){
     }
 
     receiveTCPFile2(fd, header, ST);
-
-    std::cout << "File Name: " << header[2] << std::endl;
-    std::cout << "File Size: " << header[3] << std::endl;
-
 
     freeaddrinfo(res);
     close(fd);
