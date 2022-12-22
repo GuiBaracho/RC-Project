@@ -59,12 +59,14 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
         max_h -= n;
         offset += n;
     }
+
     if(n == -1){
         std::cerr << "TCP: read error\n";
         exit(EXIT_FAILURE);
     }
 
     header_str.append(buffer, 0, n);
+    std::cout << "DID U RECEIVE ANYTHING " << header_str << std::endl;
 
     std::stringstream ss(header_str);
 
@@ -153,7 +155,7 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     std::stringstream ss(b);
     std::string m;
     while(ss >> m){
-        if (counter == 1 && m == "ERR") {
+        if (counter == 1 && m == "ERR" || counter == 2 && m == "ERR") {
             std::cout << "Syntax of SNG incorrect or PLID invalid" << "\n";
             PLID = "-1";
             return;
@@ -381,6 +383,8 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
         std::cerr << "hint: TCP: write error\n";
         exit(EXIT_FAILURE);
     }
+
+    std::cout << msg << std::endl;
 
     receiveTCPFile(fd, header, H);
 

@@ -52,18 +52,14 @@ void server_hint(int fd, std::string PLID, std::string &send){
 
     send = "RHL ";
 
-    if(FindLastGame(PLID.c_str(), pgame) == 0){
-        std::cout << "There are no current games for this PLID\n";
-        send = "NOK";
-        return;
-    }
+    std::string name = "./GAMES/GAME_" + PLID + ".txt";
 
-    std::ifstream file(pgame);
+    std::ifstream file(name);
     if (file.is_open()){
         getline(file, line);
     } else {
-        std::cout << "Following file " << pgame << "doesn't exist" << std::endl;
-        send = "NOK";
+        std::cout << "Following file " << name << "doesn't exist" << std::endl;
+        send = send + "NOK\n";
         return;
     }
     file.close();
@@ -73,37 +69,36 @@ void server_hint(int fd, std::string PLID, std::string &send){
     ss >> IMGname;
     ss >> IMGname;
 
-    IMGname = "Dados_GS/" + IMGname;
+    std::string iname = "./Dados_GS/" + IMGname;
 
-    std::ifstream image(IMGname);
+    std::ifstream image(iname);
     if(image.is_open()) {
-        file.seekg(0, file.end); //changing offset to the end 
-        flength = file.tellg(); //getting the length through offset
-        file.seekg(0, file.beg);
-
+        image.seekg(0, image.end); //changing offset to the end 
+        flength = image.tellg(); //getting the length through offset
+        image.seekg(0, file.beg);
         img = new char [flength];
-        file.read(img, flength);
+        image.read(img, flength);
     }
     else {
-        std::cout << "Following file " << IMGname << "doesn't exist" << std::endl;
-        send = "NOK";
+        send = send + "NOK\n";
         return;
     }
     image.close();
-    
-    send = "RHL OK " + IMGname + " " + std::to_string(flength) + " " + img;
+    send = "RHL OK " + IMGname + " " + std::to_string(flength) + " " + img + "\n";
 }
 
 
 
 void handleTCP(int fd){
-    int n, i = 0;
-    char buffer[8];
+    int n, i = 0, b = 0;
+    char buffer[11];
     std::string arg, send, msg;
-    std::cout << "------------------------------------> ANTES READ\n";
-    while((n = read(fd,buffer,8)) > 0){
-        std::cout << "------------------------------------> ANTES \n";
+    std::cout << fd << "------------------------------------> ANTES READ\n";
+    while((n = read(fd,buffer + b,11 - b)) > 0){
+
+        std::cout << n << "------------------------------------> ANTES \n";
         msg.append(buffer, 0, n);
+        b += n;
         std::cout << "------------------------------------> DEPOIS \n";
     }
     std::cout << "------------------------------------> SAI LOOP \n";
@@ -111,8 +106,7 @@ void handleTCP(int fd){
         std::cerr << "server: TCP: read error\n";
         exit(EXIT_FAILURE);
     }
-    std::cout << "------------------------------------> DEPOIS READ\n";
-    std::cout << "------------------------------------> msg" << msg << "\n";
+    std::cout << "------------------------------------> msg " << msg << "\n";
     std::stringstream ss(msg);
     if(ss >> arg){
         if(arg == "GSB"){
@@ -132,24 +126,24 @@ void handleTCP(int fd){
         std::cerr << "server: TCP: wrong syntax\n";
         send = "ERR\n";
     }
-
+    std::cout << send << "------------------------------------> SEND\n";
     n = write(fd,send.c_str(),send.length());
     if(n == -1){
         std::cerr << "server: TCP: write error\n";
         exit(EXIT_FAILURE);
     }
+
     close(fd);
 }
 
 
 void tcp_server(std::string word_file, std::string GSPort) {
     std::cout << "Hello from tcp" << std::endl;
-    int fd,newfd, err, n;
+    int fd, newfd, err, n;
     socklen_t addrlen;
     struct addrinfo hints, *res;
     struct sockaddr_in addr;
     char buffer[128];
-    std::string toString = "";
     std::string b;
 
     connectTCPServer(GSPort, fd, hints, res);
