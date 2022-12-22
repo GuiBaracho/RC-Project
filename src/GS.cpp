@@ -154,12 +154,15 @@ int main (int argc, char **argv) {
     if (mkdir("GAMES", 0777) == -1) {
         //Directory Already Created
     }
+    if (mkdir("SCORES", 0777) == -1) {
+        //Directory Already Created
+    }
 
     std::cout << GSPort << std::endl;
 
     if (fork() == 0) {
         tcp_server(GSPort);
-    } else {
+    } else if(fork() > 0) {
         udp_server(word_file, GSPort, v_mode);
     }
 }
