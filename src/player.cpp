@@ -54,9 +54,6 @@ int main(int argc, char **argv){
             exit(EXIT_FAILURE);
     }
 
-    std::cout << GSIP << "\n";
-    std::cout << GSPort << "\n";
-
     connectUDPClient(GSIP, GSPort, fd, hints, res);
     
     while(1){
