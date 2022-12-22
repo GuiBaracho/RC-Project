@@ -20,6 +20,7 @@
 #include "udp_GS.h"
 
 int v_mode;
+int seq;
 
 int get_val(std::string command){
     std::stringstream ss;
@@ -419,7 +420,7 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
 
     ss >> word;
     nword = get_val(word);
-    num = (rand() % nword) + 1;
+    num = seq++;//(rand() % nword) + 1;
     while(ss >> word) {
         if (count == num) {
             gword = word;
@@ -606,6 +607,7 @@ void udp_server(std::string word_file, std::string GSPort, int v) {
     char buffer[128];
     std::string b;
     v_mode = v;
+    seq = 0;
     
     connectUDPServer(GSPort, fd, hints, res);
 
