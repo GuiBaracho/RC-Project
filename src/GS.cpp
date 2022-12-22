@@ -20,22 +20,17 @@
 
 std::string toString = "";
 
-void readFile(std::string name_file, std::string &word_file) {
+void read(std::string name_file, std::string &word_file) {
     std::ifstream file;
     std::string data;
     int count = 0;
     file.open(name_file);
     
     if(file.is_open()) {
-        //file.seekg(0, file.end); //changing offset to the end 
-        //int flength = file.tellg(); //getting the length through offset
-        //file.seekg(0, file.beg);
         while (file >> data) {
             word_file = word_file + data + " ";
             count++;
         }
-        //word_file = new char [flength];
-        //file.read(word_file, flength);
         int c = count/2;
         std::string nwords = std::to_string(c);
         word_file.insert(0, " ");
@@ -52,13 +47,13 @@ void readFile(std::string name_file, std::string &word_file) {
 
 void processInput2GS(char **argv, std::string &word_file) {
     std::string argv1 = toString + argv[1];
-    readFile(argv1, word_file);
+    read(argv1, word_file);
 }
 
 void processInput3GS(char **argv, std::string &word_file, int &v_mode) {
     std::string argv1 = toString + argv[1];
     std::string argv2 = toString + argv[2];
-    readFile(argv1, word_file);
+    read(argv1, word_file);
 
     if(argv2 == "-p") {
         std::cerr << "player: error: missing argument after '" << argv2 << "'" << std::endl;
@@ -72,7 +67,7 @@ void processInput3GS(char **argv, std::string &word_file, int &v_mode) {
 
 void processInput4GS(char **argv, std::string &word_file, std::string &GSPort) {
     std::string argv1 = toString + argv[1];
-    readFile(argv1, word_file);
+    read(argv1, word_file);
     std::string argv2 = toString + argv[2];
     std::string argv3 = toString + argv[3];
 
@@ -89,7 +84,7 @@ void processInput4GS(char **argv, std::string &word_file, std::string &GSPort) {
 
 void processInput5GS(char **argv, std::string &word_file, int &v_mode, std::string &GSPort) {
     std::string argv1 = toString + argv[1];
-    readFile(argv1, word_file);
+    read(argv1, word_file);
     std::string argv2 = toString + argv[2];
     std::string argv3 = toString + argv[3];
     std::string argv4 = toString + argv[4];

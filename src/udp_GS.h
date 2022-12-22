@@ -5,7 +5,7 @@ int value(std::string command);
 int calculate_maxerrors(std::string word);
 std::string toStringT(int dt);
 std::string getTimeInString(std::string state);
-void error_message(std::string command, std::string PLID, int v_mode, int &fd, struct sockaddr_in &addr, socklen_t &addrlen);
+void error_message(std::string command, std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen);
 int createFile(std::string PLID, std::string &wordhint);
 std::string createScore(std::string path, std::string &word, std::string &n_succ, std::string &n_trials);
 void createScoreFile(std::string PLID, std::string path, std::string date);

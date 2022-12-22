@@ -19,7 +19,7 @@
 
 int v_mode;
 
-int value(std::string command){
+int get_val(std::string command){
     std::stringstream ss;
     int val;
     ss << command;
@@ -66,7 +66,7 @@ std::string getTimeInString(std::string state) {
 }
 
 
-void error_message(std::string command, std::string PLID, int v_mode, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
+void error_message(std::string command, std::string PLID, int &fd, struct sockaddr_in &addr, socklen_t &addrlen) {
     int err;
     std::string msg;
     if (command == "SNG" || command == "PLG" || command == "PWG" || command == "QUT") {
@@ -89,7 +89,10 @@ void error_message(std::string command, std::string PLID, int v_mode, int &fd, s
         }
     }
     err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
-    if(err == -1) std::cout << "Deu erro\n";
+    if(err == -1) {
+        std::cout << "server: UDP: sendto error\n";
+        exit(EXIT_FAILURE);
+    }
 }
 
 int createFile(std::string PLID, std::string &wordhint) {
@@ -238,7 +241,7 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
     int dupe = 0;
     int errors = 0;
     std::ifstream file;
-    ntrial = value(trial);
+    ntrial = get_val(trial);
     std::string msg, code;
     std::string path = "./GAMES/GAME_" + PLID + ".txt";
     file.open(path);
@@ -307,7 +310,7 @@ int searchOnFile(std::string type, std::string PLID, std::string trial, std::str
             }
             return 1;
         } 
-        else if (ntrial != value(trial)) {
+        else if (ntrial != get_val(trial)) {
             msg = type + " INV " + std::to_string(ntrial-1) + "\n";
             err = sendto(fd, msg.c_str(), msg.length(), 0, (struct sockaddr*) &addr, addrlen);
             if(err == -1) {
@@ -389,7 +392,7 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
     std::stringstream ss(word_file);
 
     ss >> word;
-    nword = value(word);
+    nword = get_val(word);
     num = (rand() % nword) + 1;
     while(ss >> word) {
         if (count == num) {
@@ -638,10 +641,10 @@ void udp_server(std::string word_file, std::string GSPort, int v) {
             } else if (type == "QUT" && counter == 2) {
                 server_quit(PLID, fd, addr, addrlen);
             } else {
-                error_message(type, PLID, v_mode, fd, addr, addrlen);
+                error_message(type, PLID, fd, addr, addrlen);
             }
         } else {
-            error_message(type, PLID, v_mode, fd, addr, addrlen);
+            error_message(type, PLID, fd, addr, addrlen);
         }
     }
 
