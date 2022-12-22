@@ -47,25 +47,6 @@ void read_TCP(int fd, std::string &arg, int b_size){
     ss >> arg;
 }
 
-void readFile(std::string name_file, char *&word_file) {
-    std::string data;
-    std::ifstream file;
-    file.open(name_file);
-    if(file.is_open()) {
-        file.seekg(0, file.end); //changing offset to the end 
-        int flength = file.tellg(); //getting the length through offset
-        file.seekg(0, file.beg);
-
-        word_file = new char [flength];
-        file.read(word_file, flength);
-        std::cout << word_file << std::endl;
-    }
-    else {
-        std::cout << "Following file " << name_file << "doesn't exist" << std::endl;
-    }
-    file.close();
-}
-
 int receiveTCPFile(int fd, std::string header[4], std::string type){
     int n, max_h = 0, size_h = 0, offset = 0, i = 0;
     std::string header_str, arg;
@@ -84,8 +65,6 @@ int receiveTCPFile(int fd, std::string header[4], std::string type){
     }
 
     header_str.append(buffer, 0, n);
-    std::cout << "DID U RECEIVE ANYTHING " << header_str << std::endl;
-
     std::stringstream ss(header_str);
 
     while(i < 4 && (ss >> arg)){
@@ -160,7 +139,7 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
         std::cerr << "TCP: wrong message received\n";
         exit(EXIT_FAILURE);
     }
-    std::cout << "TESTE1: " << header[0] << "\n";
+    
     header[1].clear();
 
     while((n = read(fd,buffer,1)) != -1){
@@ -178,7 +157,7 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
             std::cout << "The scoreboard is empty.\n";
             return 0;
         } else if (header[1] == "OK"){
-            std::cout << "Saiu certo.\n";
+            //continue
         }else{
             std::cerr << "client: TCP: wrong protocol message\n";
             exit(EXIT_FAILURE);
@@ -188,7 +167,7 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
             std::cout << "There are no hints for this word.\n";
             return 0;
         } else if (header[1] == "OK"){
-            std::cout << "Saiu certo.\n";
+            //continue
         }else{
             std::cerr << "client: TCP: wrong protocol message\n";
             exit(EXIT_FAILURE);
@@ -225,7 +204,6 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
         std::cout << "File Size: " << header[3] << std::endl;
     }
     
-    
     std::ofstream file(header[2]);
     int flength = stoi(header[3]);
     while((n = read(fd,buffer,128)) > 0){
@@ -242,8 +220,6 @@ int receiveTCPFile2(int fd, std::string header[4], std::string type){
         exit(EXIT_FAILURE);
     }
     file.close();
-
-    std::cout << "passou: " <<  header[1] <<"\n";
     return 0;
 }
 
@@ -258,7 +234,6 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     std::string b;
     addrlen = sizeof(addr);
 
-    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1){
         std::cout << "start: UDP: sendto error\n";
@@ -272,7 +247,6 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
     }
 
     b.append(buffer, 0, err);
-    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
     while(ss >> m){
@@ -286,17 +260,14 @@ void start(std::string &PLID, std::string &word, int fd, struct addrinfo *&res){
             return;
         }
         else if (counter == 3) {
-            std::cout << "Number of letters" << "\n";
             nletter = m;
         }
         else if (counter == 4) {
             nerror = m;
-            std::cout << "Number of errors" << "\n";
         }
         counter +=1; 
     }
     int num_letters = val(nletter);
-    std::cout << num_letters << "\n";
     for (int i = 0; i < num_letters; i++) {
         w = w + " _";
     }
@@ -317,7 +288,6 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
     std::string b;
     addrlen = sizeof(addr);
 
-    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1){
         std::cout << "play: UDP: sendto error\n";
@@ -331,7 +301,6 @@ void play(std::string PLID, char letter, int &trial, std::string &word, int fd, 
     }
 
     b.append(buffer, 0, err);
-    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
 
@@ -413,7 +382,6 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     std::string b;
     addrlen = sizeof(addr);
 
-    std::cout << msg <<"\n";
     err = sendto(fd,msg.c_str(),msg.length(),0,res->ai_addr,res->ai_addrlen);
     if(err == -1){
         std::cout << "guess: UDP: sendto error\n";
@@ -427,7 +395,6 @@ void guess(std::string PLID, std::string gword, int &trial, int fd, struct addri
     }
 
     b.append(buffer, 0, err);
-    std::cout << b << "\n";
      
     std::stringstream ss(b);
     std::string m;
@@ -502,8 +469,6 @@ void hint(std::string GSIP, std::string GSPort, std::string PLID){
         exit(EXIT_FAILURE);
     }
 
-    std::cout << msg << std::endl;
-
     receiveTCPFile2(fd, header, H);
 
     freeaddrinfo(res);
@@ -553,7 +518,6 @@ void quit(std::string PLID, int fd, struct addrinfo *&res){
     }
 
     b.append(buffer, 0, err);
-    std::cout << b << "\n";
     std::stringstream ss(b);
     std::string m;
     while(ss >> m){

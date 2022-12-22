@@ -200,7 +200,6 @@ int create_state(int fd, std::string PLID) {
 }
 
 std::string addSpaces(int n){
-    std::cout << "Fucn: addSpaces\n";
     std::string space;
     for(int i = 0; i < n; i++){
         space += " ";
@@ -209,7 +208,6 @@ std::string addSpaces(int n){
 }
 
 std::string place(int n){
-    std::cout << "Fucn: place\n";
     if(n < 10){
         std::string place = " " + std::to_string(n);
         return place;
@@ -244,58 +242,6 @@ void read_TCP(int fd, std::string &arg, int b_size){
     }
     std::stringstream ss(msg);
     ss >> arg;
-}
-
-void read_server(std::string name_file, std::string &word_file) {
-    std::ifstream file;
-    std::string data;
-    int count = 0;
-    file.open(name_file);
-    
-    if(file.is_open()) {
-        while (file >> data) {
-            word_file = word_file + data + " ";
-            count++;
-        }
-        int c = count/2;
-        std::string nwords = std::to_string(c);
-        word_file.insert(0, " ");
-        word_file.insert(0, nwords);
-        std::cout << word_file << std::endl;
-
-    }
-    else {
-        std::cout << "Following file " << name_file << " doesn't exist" << std::endl;
-    }
-    file.close();
-}
-
-int FindLastGame(const char* PLID, char* fname){
-    struct dirent ** filelist;
-    int n_entries, found;
-    char dirname[20];
-
-    sprintf(dirname, "GAMES/%s/", PLID);
-
-    n_entries = scandir(dirname, &filelist, 0, alphasort);
-    found = 0;
-
-    if(n_entries <= 0){
-        return 0;
-    } else {
-        while(n_entries--){
-            if(filelist[n_entries]->d_name[0] != '.'){
-                sprintf(fname, "GAMES/%s/%s", PLID, filelist[n_entries]->d_name);
-                found = 1;
-            }
-            free(filelist[n_entries]);
-            if(found){
-                break;
-            }
-        }
-        free(filelist);
-    }
-    return found;
 }
 
 int FindTopScores(SCORELIST *list){
@@ -413,7 +359,6 @@ int server_scoreboard(int fd, SCORELIST* list){
     n_scores = FindTopScores(list);
 
     if(n_scores == 0){
-        std::cout << "--------------------------- IM HERE" << "\n";
         write_TCP(fd, "RSB EMPTY\n");
         if (v_modetcp == 1) {
             std::cout << "scoreboard: scoreboard is empty\n";
@@ -425,31 +370,18 @@ int server_scoreboard(int fd, SCORELIST* list){
         if (v_modetcp == 1) {
             std::cout << "scoreboard: send scoreboard file TOPSCORES.txt\n";
         }
-        std::cout << "n: " << n_scores << "\n";
         for(int i = 0; i < n_scores; i++){
-            //std::cout << "n:1 "<<place(i+1)<< "\n";
             msg = place(i+1);
-            //std::cout << "n:2 " << "\n";
             msg += " - ";
-            //std::cout << "n:3 " <<std::to_string(list->score[i])<< "\n";
             msg += place(list->score[i]);
-            //std::cout << "n:4 " << "\n";
             msg += "  ";
-            //std::cout << "n:5 " <<list->PLID[i] << "\n";
             msg += list->PLID[i];
-            //std::cout << "n:6 " << "\n";
             msg += "  ";
-            //std::cout << "n:7 " <<list->word[i] << "\n";
             msg += list->word[i];
-            //std::cout << "n:8 " << "\n";
             msg += addSpaces(40 - list->word[i].length());
-            //std::cout << "n:9 " << "\n";
             msg += place(list->n_succ[i]);
-            //std::cout << "n:10 " << "\n";
             msg += "             ";
-            //std::cout << "n:11 " << "\n";
             msg += place(list->n_succ[i]) + "\n";
-            std::cout << "n: "<< msg << "\n";
             write_TCP(fd, msg);
         }
     }
@@ -547,7 +479,6 @@ void handleTCP(int fd, SCORELIST* list){
 }
 
 void tcp_server(SCORELIST* list, std::string GSPort, int v) {
-    std::cout << "Hello from tcp" << std::endl;
     int fd, newfd, err, n;
     socklen_t addrlen;
     struct addrinfo hints, *res;

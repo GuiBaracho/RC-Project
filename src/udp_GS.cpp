@@ -445,7 +445,6 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
             std::cout << "server_start: UDP: sendto error\n";
             exit(EXIT_FAILURE);
         }
-        std::cout << msg << std::endl;
 
     } else if (n == 0) {
         if (v_mode == 1) {
@@ -458,8 +457,6 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
             std::cout << "server_start: UDP: sendto error\n";
             exit(EXIT_FAILURE);
         }
-
-        std::cout << msg << "\n";
     }
 } 
 
@@ -470,7 +467,6 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
     int ok = 0;
     if (isdigit(letter[0]) == true) {
         std::string msg = "RLG ERR\n";
-        std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
             std::cout << "server_play: UDP: sendto error\n";
@@ -495,7 +491,6 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
             std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - " << ok << " hits (word not guessed)\n";
         }
         std::string add = "RLG OK " + trial + " " + std::to_string(ok) + msg + "\n";
-        std::cout << add << std::endl;
         err = sendto(fd,add.c_str(),add.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
             std::cout << "server_play: UDP: sendto error\n";
@@ -507,7 +502,6 @@ void server_play(std::string PLID, std::string trial, std::string letter, int &f
             std::cout << "PLID = " << PLID << ": play letter: '" << letter << "' - miss\n";
         }
         msg = "RLG NOK " + trial + "\n";
-        std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
             std::cout << "server_play: UDP: sendto error\n";
@@ -531,7 +525,7 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
                 std::cout << "PLID = " << PLID << ": guess word: '" << gword << "' - ERR (word has numbers)\n";
             }
             msg = "RWG ERR\n";
-            std::cout << msg << std::endl;
+            
             err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
             if(err == -1) {
                 std::cout << "server_guess: UDP: sendto error\n";
@@ -563,7 +557,6 @@ void server_guess(std::string PLID, std::string trial, std::string gword, int &f
             std::cout << "PLID = " << PLID << ": guess word: '" << gword << "' - MISS\n";
         }
         msg = "RWG NOK " + trial + "\n";
-        std::cout << msg << std::endl;
         err = sendto(fd,msg.c_str(),msg.length(),0,(struct sockaddr*) &addr, addrlen);
         if(err == -1) {
             std::cout << "server_guess: UDP: sendto error\n";

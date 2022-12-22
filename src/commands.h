@@ -10,6 +10,5 @@ void state(std::string GSIP, std::string GSPort, std::string PLID);
 void quit(std::string PLID, int fd, struct addrinfo *&res);
 void _exit();
 int val(std::string command);
-void readFile(std::string name_file, char *&word_file);
 
 #endif
