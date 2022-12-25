@@ -431,10 +431,10 @@ void server_start(std::string word_file, std::string PLID, int &fd, struct socka
         ss >> word;
         count++;
     }
-    if (seq == 26) {
-        seq = 0;
-    }
-    std::cout << gword << " " << hint << std::endl;
+    if (seq == nword) { //IN comment if random
+        seq = 0; //
+    } //
+    
 
     word = gword + " " + hint + "\n";
     n = createFile(PLID, word);
